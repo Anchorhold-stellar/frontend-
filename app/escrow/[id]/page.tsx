@@ -87,7 +87,9 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       />
       {actionError && <p style={{ color: "#b00020" }}>{actionError}</p>}
 
-      {escrow.status !== "disputed" && (
+      {escrow.status === "disputed" ? (
+        <a href={`/disputes/${escrow.escrow_id}`}>View dispute</a>
+      ) : (
         <a href={`/disputes/new?escrowId=${escrow.escrow_id}`}>
           Something wrong with this stay? Open a dispute.
         </a>
