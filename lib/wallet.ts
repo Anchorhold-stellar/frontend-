@@ -16,11 +16,18 @@ async function rpcCall<T>(method: string, params: Record<string, unknown>): Prom
   return body.result as T;
 }
 
+export class FreighterNotInstalledError extends Error {
+  constructor() {
+    super("Freighter is not installed");
+    this.name = "FreighterNotInstalledError";
+  }
+}
+
 export async function connectFreighter(): Promise<string> {
   const freighter = await import("@stellar/freighter-api");
   const connected = await freighter.isConnected();
   if (!connected) {
-    throw new Error("Freighter is not installed");
+    throw new FreighterNotInstalledError();
   }
   return freighter.requestAccess();
 }
