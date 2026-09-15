@@ -6,6 +6,7 @@ import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
+import { isValidAccountAddress, isValidContractAddress } from "../../../lib/validation";
 
 type MilestoneDraft = {
   description: string;
@@ -78,6 +79,16 @@ export default function NewEscrow() {
     e.preventDefault();
     if (!publicKey) {
       setError("connect your wallet first");
+      setStatus("error");
+      return;
+    }
+    if (!isValidAccountAddress(hostWallet)) {
+      setError("host wallet address doesn't look like a valid Stellar account (G...)");
+      setStatus("error");
+      return;
+    }
+    if (!isValidContractAddress(assetAddress)) {
+      setError("asset address doesn't look like a valid contract address (C...)");
       setStatus("error");
       return;
     }
@@ -154,6 +165,11 @@ export default function NewEscrow() {
               style={{ width: "100%" }}
             />
           </label>
+          {hostWallet.length > 0 && !isValidAccountAddress(hostWallet) && (
+            <div style={{ fontSize: 12, color: "var(--color-danger)" }}>
+              Doesn&apos;t look like a valid account address
+            </div>
+          )}
         </div>
         <div style={{ marginBottom: 12 }}>
           <label>
@@ -167,6 +183,11 @@ export default function NewEscrow() {
               style={{ width: "100%" }}
             />
           </label>
+          {assetAddress.length > 0 && !isValidContractAddress(assetAddress) && (
+            <div style={{ fontSize: 12, color: "var(--color-danger)" }}>
+              Doesn&apos;t look like a valid contract address
+            </div>
+          )}
         </div>
 
         <h2>Milestones</h2>
