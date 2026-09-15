@@ -21,6 +21,21 @@ type RoleFilter = "all" | "hosting" | "renting";
 
 const STATUS_FILTERS = ["all", "created", "active", "disputed", "completed", "cancelled"] as const;
 
+const SORT_OPTIONS = {
+  "id-desc": { label: "Newest ID first", compare: (a: EscrowSummary, b: EscrowSummary) => b.escrow_id - a.escrow_id },
+  "id-asc": { label: "Oldest ID first", compare: (a: EscrowSummary, b: EscrowSummary) => a.escrow_id - b.escrow_id },
+  "amount-desc": {
+    label: "Amount: high to low",
+    compare: (a: EscrowSummary, b: EscrowSummary) => Number(b.total_amount) - Number(a.total_amount),
+  },
+  "amount-asc": {
+    label: "Amount: low to high",
+    compare: (a: EscrowSummary, b: EscrowSummary) => Number(a.total_amount) - Number(b.total_amount),
+  },
+} as const;
+
+type SortKey = keyof typeof SORT_OPTIONS;
+
 export default function Dashboard() {
   useDocumentTitle("Dashboard");
   const { publicKey } = useWallet();
@@ -29,6 +44,7 @@ export default function Dashboard() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id-desc");
 
   useEffect(() => {
     if (!publicKey) {
@@ -59,16 +75,18 @@ export default function Dashboard() {
   const filtered = useMemo(() => {
     if (!escrows) return escrows;
     const query = search.trim();
-    return escrows.filter((e) => {
-      const roleMatch =
-        roleFilter === "all" ||
-        (roleFilter === "hosting" && e.host_wallet === publicKey) ||
-        (roleFilter === "renting" && e.renter_wallet === publicKey);
-      const statusMatch = statusFilter === "all" || e.status === statusFilter;
-      const searchMatch = query === "" || String(e.escrow_id).includes(query);
-      return roleMatch && statusMatch && searchMatch;
-    });
-  }, [escrows, roleFilter, statusFilter, search, publicKey]);
+    return escrows
+      .filter((e) => {
+        const roleMatch =
+          roleFilter === "all" ||
+          (roleFilter === "hosting" && e.host_wallet === publicKey) ||
+          (roleFilter === "renting" && e.renter_wallet === publicKey);
+        const statusMatch = statusFilter === "all" || e.status === statusFilter;
+        const searchMatch = query === "" || String(e.escrow_id).includes(query);
+        return roleMatch && statusMatch && searchMatch;
+      })
+      .sort(SORT_OPTIONS[sortKey].compare);
+  }, [escrows, roleFilter, statusFilter, search, sortKey, publicKey]);
 
   if (!publicKey) {
     return (
@@ -83,12 +101,25 @@ export default function Dashboard() {
     <div>
       <h1>Your escrows</h1>
 
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by escrow ID…"
-        style={{ width: "100%", padding: 8, marginBottom: 12 }}
-      />
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by escrow ID…"
+          style={{ flex: 1, padding: 8 }}
+        />
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value as SortKey)}
+          style={{ padding: 8 }}
+        >
+          {Object.entries(SORT_OPTIONS).map(([key, { label }]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
         {(["all", "hosting", "renting"] as const).map((role) => (
