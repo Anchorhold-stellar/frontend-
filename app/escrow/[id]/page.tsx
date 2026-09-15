@@ -9,6 +9,7 @@ import { StatusBadge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
+import { ProgressBar } from "../../../components/ui/ProgressBar";
 
 type Milestone = {
   milestone_index: number;
@@ -112,12 +113,26 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   const isRenter = publicKey === escrow.renter_wallet;
   const isHost = publicKey === escrow.host_wallet;
 
+  const releasedCount = escrow.milestones.filter((m) => m.released).length;
+  const releasedAmount = escrow.milestones
+    .filter((m) => m.released)
+    .reduce((sum, m) => sum + Number(m.amount), 0);
+  const totalAmount = Number(escrow.total_amount) || 1;
+
   return (
     <div>
       <h1>Escrow #{escrow.escrow_id}</h1>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
       </p>
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, color: "var(--color-muted)", marginBottom: 4 }}>
+          {releasedCount} of {escrow.milestones.length} milestones released ·{" "}
+          {Math.round((releasedAmount / totalAmount) * 100)}% of funds released
+        </div>
+        <ProgressBar fraction={releasedAmount / totalAmount} />
+      </div>
 
       <div style={{ fontSize: 14, color: "var(--color-fg)", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
