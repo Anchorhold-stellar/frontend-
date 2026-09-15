@@ -16,6 +16,20 @@ async function rpcCall<T>(method: string, params: Record<string, unknown>): Prom
   return body.result as T;
 }
 
+/**
+ * Pings the configured Soroban RPC endpoint. Returns false on any network
+ * error or non-"healthy" status rather than throwing — this is meant for a
+ * passive status indicator, not something callers need to try/catch.
+ */
+export async function checkRpcHealth(): Promise<boolean> {
+  try {
+    const result = await rpcCall<{ status: string }>("getHealth", {});
+    return result.status === "healthy";
+  } catch {
+    return false;
+  }
+}
+
 export class FreighterNotInstalledError extends Error {
   constructor() {
     super("Freighter is not installed");
