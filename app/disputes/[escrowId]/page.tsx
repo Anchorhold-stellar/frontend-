@@ -1,0 +1,132 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useWallet } from "../../../lib/wallet-context";
+import { signAndSubmit } from "../../../lib/wallet";
+
+type Evidence = {
+  id: string;
+  submitted_by: string;
+  uri: string;
+  note: string | null;
+  created_at: string;
+};
+
+type DisputeDetail = {
+  escrow_id: number;
+  milestone_index: number;
+  opened_by_wallet: string;
+  resolved: boolean;
+  outcome: string;
+  opened_at: string;
+  evidence: Evidence[];
+};
+
+export default function DisputeDetail({ params }: { params: { escrowId: string } }) {
+  const { publicKey } = useWallet();
+  const [dispute, setDispute] = useState<DisputeDetail | null | undefined>(undefined);
+  const [pending, setPending] = useState<"vote-renter" | "vote-host" | "resolve" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadDispute() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/${params.escrowId}`, {
+      cache: "no-store",
+    });
+    setDispute(res.ok ? await res.json() : null);
+  }
+
+  useEffect(() => {
+    loadDispute();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.escrowId]);
+
+  async function vote(voteForRenter: boolean) {
+    if (!publicKey) return;
+    setError(null);
+    setPending(voteForRenter ? "vote-renter" : "vote-host");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jurorWallet: publicKey,
+          escrowId: Number(params.escrowId),
+          voteForRenter,
+        }),
+      });
+      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
+      const { xdr } = await res.json();
+      await signAndSubmit(xdr);
+      await loadDispute();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to cast vote");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function resolve() {
+    setError(null);
+    setPending("resolve");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/resolve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escrowId: Number(params.escrowId) }),
+      });
+      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
+      const { xdr } = await res.json();
+      await signAndSubmit(xdr);
+      await loadDispute();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to resolve dispute");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  if (dispute === undefined) return <p>Loading…</p>;
+  if (dispute === null) return <p>No dispute found for this escrow.</p>;
+
+  return (
+    <div>
+      <h1>Dispute — escrow #{dispute.escrow_id}</h1>
+      <p>
+        Milestone {dispute.milestone_index} · opened by{" "}
+        <code>{dispute.opened_by_wallet}</code>
+      </p>
+      <p>
+        Status: <strong>{dispute.resolved ? dispute.outcome : "voting open"}</strong>
+      </p>
+
+      <h2>Evidence</h2>
+      {dispute.evidence.length === 0 && <p>No evidence submitted.</p>}
+      <ul>
+        {dispute.evidence.map((ev) => (
+          <li key={ev.id} style={{ marginBottom: 8 }}>
+            <a href={ev.uri} target="_blank" rel="noreferrer">
+              {ev.uri}
+            </a>
+            {ev.note && <div style={{ fontSize: 13, color: "#666" }}>{ev.note}</div>}
+            <div style={{ fontSize: 12, color: "#999" }}>from {ev.submitted_by}</div>
+          </li>
+        ))}
+      </ul>
+
+      {!dispute.resolved && (
+        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+          <button onClick={() => vote(true)} disabled={!publicKey || pending !== null}>
+            {pending === "vote-renter" ? "Voting…" : "Vote for renter"}
+          </button>
+          <button onClick={() => vote(false)} disabled={!publicKey || pending !== null}>
+            {pending === "vote-host" ? "Voting…" : "Vote for host"}
+          </button>
+          <button onClick={resolve} disabled={pending !== null}>
+            {pending === "resolve" ? "Resolving…" : "Resolve (once votes are in)"}
+          </button>
+        </div>
+      )}
+      {error && <p style={{ color: "#b00020" }}>{error}</p>}
+    </div>
+  );
+}
