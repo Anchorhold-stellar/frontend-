@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { WalletProvider } from "../lib/wallet-context";
 import { ToastProvider } from "../lib/toast-context";
 import { NavWallet } from "../components/NavWallet";
+import { NetworkBanner } from "../components/NetworkBanner";
 
 export const metadata = {
   title: "SafeTrust v2",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
         <ToastProvider>
           <WalletProvider>
+            <NetworkBanner />
             <nav
               style={{
                 display: "flex",
