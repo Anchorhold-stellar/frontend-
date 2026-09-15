@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useWallet } from "../../lib/wallet-context";
 import { Card } from "../../components/ui/Card";
 import { StatusBadge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
+import { Button } from "../../components/ui/Button";
 
 type EscrowSummary = {
   escrow_id: number;
@@ -15,10 +16,16 @@ type EscrowSummary = {
   host_wallet: string;
 };
 
+type RoleFilter = "all" | "hosting" | "renting";
+
+const STATUS_FILTERS = ["all", "created", "active", "disputed", "completed", "cancelled"] as const;
+
 export default function Dashboard() {
   const { publicKey } = useWallet();
   const [escrows, setEscrows] = useState<EscrowSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
   useEffect(() => {
     if (!publicKey) {
@@ -46,6 +53,18 @@ export default function Dashboard() {
     };
   }, [publicKey]);
 
+  const filtered = useMemo(() => {
+    if (!escrows) return escrows;
+    return escrows.filter((e) => {
+      const roleMatch =
+        roleFilter === "all" ||
+        (roleFilter === "hosting" && e.host_wallet === publicKey) ||
+        (roleFilter === "renting" && e.renter_wallet === publicKey);
+      const statusMatch = statusFilter === "all" || e.status === statusFilter;
+      return roleMatch && statusMatch;
+    });
+  }, [escrows, roleFilter, statusFilter, publicKey]);
+
   if (!publicKey) {
     return (
       <div>
@@ -58,10 +77,34 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Your escrows</h1>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        {(["all", "hosting", "renting"] as const).map((role) => (
+          <Button
+            key={role}
+            variant={roleFilter === role ? "primary" : "secondary"}
+            onClick={() => setRoleFilter(role)}
+          >
+            {role === "all" ? "All roles" : role}
+          </Button>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {STATUS_FILTERS.map((status) => (
+          <Button
+            key={status}
+            variant={statusFilter === status ? "primary" : "secondary"}
+            onClick={() => setStatusFilter(status)}
+          >
+            {status === "all" ? "All statuses" : status}
+          </Button>
+        ))}
+      </div>
+
       {error && <p style={{ color: "#b00020" }}>{error}</p>}
-      {!error && escrows === null && <Spinner label="Loading escrows…" />}
-      {escrows?.length === 0 && <EmptyState>No escrows yet.</EmptyState>}
-      {escrows?.map((e) => (
+      {!error && filtered === null && <Spinner label="Loading escrows…" />}
+      {filtered?.length === 0 && <EmptyState>No escrows match these filters.</EmptyState>}
+      {filtered?.map((e) => (
         <Card key={e.escrow_id}>
           <a href={`/escrow/${e.escrow_id}`} style={{ display: "flex", justifyContent: "space-between" }}>
             <span>
