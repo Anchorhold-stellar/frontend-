@@ -8,6 +8,7 @@ import { signAndSubmit } from "../../../lib/wallet";
 import { StatusBadge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Button } from "../../../components/ui/Button";
+import { CopyButton } from "../../../components/ui/CopyButton";
 
 type Milestone = {
   milestone_index: number;
@@ -109,6 +110,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   }
 
   const isRenter = publicKey === escrow.renter_wallet;
+  const isHost = publicKey === escrow.host_wallet;
 
   return (
     <div>
@@ -116,6 +118,19 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
       </p>
+
+      <div style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          Renter: <code>{escrow.renter_wallet}</code>
+          <CopyButton value={escrow.renter_wallet} />
+          {isRenter && <em>(you)</em>}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          Host: <code>{escrow.host_wallet}</code>
+          <CopyButton value={escrow.host_wallet} />
+          {isHost && <em>(you)</em>}
+        </div>
+      </div>
 
       {isRenter && escrow.status === "created" && (
         <div style={{ marginBottom: 16 }}>
