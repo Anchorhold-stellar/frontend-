@@ -6,6 +6,7 @@ import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
+import { useDocumentTitle } from "../../../lib/use-document-title";
 
 type Evidence = {
   id: string;
@@ -37,6 +38,7 @@ type EscrowSummary = {
 };
 
 export default function DisputeDetail({ params }: { params: { escrowId: string } }) {
+  useDocumentTitle(`Dispute #${params.escrowId}`);
   const { publicKey } = useWallet();
   const { toast } = useToast();
   const [dispute, setDispute] = useState<DisputeDetail | null | undefined>(undefined);

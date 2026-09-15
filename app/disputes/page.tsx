@@ -6,6 +6,7 @@ import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
+import { useDocumentTitle } from "../../lib/use-document-title";
 
 type DisputeSummary = {
   escrow_id: number;
@@ -18,6 +19,7 @@ type DisputeSummary = {
 };
 
 export default function Disputes() {
+  useDocumentTitle("Disputes");
   const { publicKey } = useWallet();
   const [disputes, setDisputes] = useState<DisputeSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);

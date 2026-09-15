@@ -10,6 +10,7 @@ import { Spinner } from "../../../components/ui/Spinner";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { ProgressBar } from "../../../components/ui/ProgressBar";
+import { useDocumentTitle } from "../../../lib/use-document-title";
 
 type Milestone = {
   milestone_index: number;
@@ -29,6 +30,7 @@ type Escrow = {
 };
 
 export default function EscrowDetail({ params }: { params: { id: string } }) {
+  useDocumentTitle(`Escrow #${params.id}`);
   const { publicKey } = useWallet();
   const { toast } = useToast();
   const [escrow, setEscrow] = useState<Escrow | null | undefined>(undefined);

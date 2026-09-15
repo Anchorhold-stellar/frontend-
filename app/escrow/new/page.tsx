@@ -8,6 +8,7 @@ import { Button } from "../../../components/ui/Button";
 import { ConfirmButton } from "../../../components/ui/ConfirmButton";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { isValidAccountAddress, isValidContractAddress } from "../../../lib/validation";
+import { useDocumentTitle } from "../../../lib/use-document-title";
 
 type MilestoneDraft = {
   description: string;
@@ -30,6 +31,7 @@ type Draft = {
 };
 
 export default function NewEscrow() {
+  useDocumentTitle("Create escrow");
   const { publicKey } = useWallet();
   const { toast } = useToast();
   const [hostWallet, setHostWallet] = useState("");

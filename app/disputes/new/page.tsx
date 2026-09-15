@@ -7,6 +7,7 @@ import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
+import { useDocumentTitle } from "../../../lib/use-document-title";
 
 export default function NewDispute() {
   return (
@@ -17,6 +18,7 @@ export default function NewDispute() {
 }
 
 function NewDisputeForm() {
+  useDocumentTitle("Open a dispute");
   const { publicKey } = useWallet();
   const { toast } = useToast();
   const searchParams = useSearchParams();

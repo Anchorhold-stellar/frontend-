@@ -7,6 +7,7 @@ import { StatusBadge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
 import { Button } from "../../components/ui/Button";
+import { useDocumentTitle } from "../../lib/use-document-title";
 
 type EscrowSummary = {
   escrow_id: number;
@@ -21,6 +22,7 @@ type RoleFilter = "all" | "hosting" | "renting";
 const STATUS_FILTERS = ["all", "created", "active", "disputed", "completed", "cancelled"] as const;
 
 export default function Dashboard() {
+  useDocumentTitle("Dashboard");
   const { publicKey } = useWallet();
   const [escrows, setEscrows] = useState<EscrowSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
