@@ -150,8 +150,8 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
             <a href={ev.uri} target="_blank" rel="noreferrer">
               {ev.uri}
             </a>
-            {ev.note && <div style={{ fontSize: 13, color: "#666" }}>{ev.note}</div>}
-            <div style={{ fontSize: 12, color: "#999" }}>from {ev.submitted_by}</div>
+            {ev.note && <div style={{ fontSize: 13, color: "var(--color-muted)" }}>{ev.note}</div>}
+            <div style={{ fontSize: 12, color: "var(--color-muted)" }}>from {ev.submitted_by}</div>
           </li>
         ))}
       </ul>
@@ -169,7 +169,7 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
           </Button>
         </div>
       )}
-      {error && <p style={{ color: "#b00020" }}>{error}</p>}
+      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
     </div>
   );
 }

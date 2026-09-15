@@ -47,7 +47,7 @@ export default function Home() {
         {STEPS.map((step) => (
           <Card key={step.title}>
             <strong>{step.title}</strong>
-            <p style={{ fontSize: 14, color: "#666", marginBottom: 0 }}>{step.body}</p>
+            <p style={{ fontSize: 14, color: "var(--color-muted)", marginBottom: 0 }}>{step.body}</p>
           </Card>
         ))}
       </div>

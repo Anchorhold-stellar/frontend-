@@ -19,7 +19,7 @@ export function WalletConnect() {
       <button onClick={connect} disabled={connecting}>
         {connecting ? "Connecting…" : "Connect Freighter"}
       </button>
-      {error && <p style={{ color: "#b00020" }}>{error}</p>}
+      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
     </div>
   );
 }

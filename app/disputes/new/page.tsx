@@ -83,7 +83,7 @@ function NewDisputeForm() {
     return (
       <div>
         <h1>Open a dispute</h1>
-        <p style={{ color: "#b00020" }}>
+        <p style={{ color: "var(--color-danger)" }}>
           No escrow selected. Open this page from an escrow&apos;s detail view.
         </p>
       </div>
@@ -106,7 +106,7 @@ function NewDisputeForm() {
   return (
     <div>
       <h1>Open a dispute for escrow #{escrowId}</h1>
-      {!publicKey && <p style={{ color: "#b00020" }}>Connect your wallet to continue.</p>}
+      {!publicKey && <p style={{ color: "var(--color-danger)" }}>Connect your wallet to continue.</p>}
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 12 }}>
           <label>
@@ -149,7 +149,7 @@ function NewDisputeForm() {
         <Button type="submit" disabled={!publicKey || status === "submitting"}>
           {status === "submitting" ? "Submitting…" : "Open dispute"}
         </Button>
-        {error && <p style={{ color: "#b00020" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       </form>
     </div>
   );

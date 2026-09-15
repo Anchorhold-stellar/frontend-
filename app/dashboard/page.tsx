@@ -111,7 +111,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {error && <p style={{ color: "#b00020" }}>{error}</p>}
+      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       {!error && filtered === null && <Spinner label="Loading escrows…" />}
       {filtered?.length === 0 && (
         <EmptyState>No escrows match these filters{search && " and search"}.</EmptyState>

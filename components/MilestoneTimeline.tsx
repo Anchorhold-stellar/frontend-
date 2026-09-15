@@ -28,12 +28,12 @@ export function MilestoneTimeline({
             justifyContent: "space-between",
             alignItems: "center",
             padding: "12px 0",
-            borderBottom: "1px solid #eee",
+            borderBottom: "1px solid var(--color-border)",
           }}
         >
           <div>
             <strong>{m.description}</strong>
-            <div style={{ fontSize: 13, color: "#666" }}>
+            <div style={{ fontSize: 13, color: "var(--color-muted)" }}>
               {m.released ? (
                 "Released"
               ) : m.auto_release_at ? (

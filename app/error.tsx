@@ -17,7 +17,7 @@ export default function GlobalError({
   return (
     <div>
       <h1>Something went wrong</h1>
-      <p style={{ color: "#b00020" }}>{error.message || "An unexpected error occurred."}</p>
+      <p style={{ color: "var(--color-danger)" }}>{error.message || "An unexpected error occurred."}</p>
       <Button onClick={reset}>Try again</Button>
     </div>
   );

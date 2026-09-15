@@ -119,7 +119,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
         <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
       </p>
 
-      <div style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
+      <div style={{ fontSize: 14, color: "var(--color-fg)", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           Renter: <code>{escrow.renter_wallet}</code>
           <CopyButton value={escrow.renter_wallet} />
@@ -134,7 +134,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
 
       {isRenter && escrow.status === "created" && (
         <div style={{ marginBottom: 16 }}>
-          <p style={{ color: "#666", fontSize: 14 }}>
+          <p style={{ color: "var(--color-muted)", fontSize: 14 }}>
             This escrow hasn&apos;t been funded yet. Deposit to start the milestone clock.
           </p>
           <Button onClick={handleDeposit} disabled={depositing}>
@@ -148,7 +148,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
         onConfirm={isRenter ? handleConfirm : undefined}
         confirmingIndex={confirmingIndex}
       />
-      {actionError && <p style={{ color: "#b00020" }}>{actionError}</p>}
+      {actionError && <p style={{ color: "var(--color-danger)" }}>{actionError}</p>}
 
       {escrow.status === "disputed" ? (
         <a href={`/disputes/${escrow.escrow_id}`}>View dispute</a>

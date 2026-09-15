@@ -22,7 +22,7 @@ export function CopyButton({ value, label = "Copy" }: { value: string; label?: s
         border: "none",
         background: "none",
         cursor: "pointer",
-        color: "#666",
+        color: "var(--color-muted)",
         fontSize: 12,
         padding: 0,
         textDecoration: "underline",

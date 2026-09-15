@@ -140,7 +140,7 @@ export default function NewEscrow() {
   return (
     <div>
       <h1>Create an escrow</h1>
-      {!publicKey && <p style={{ color: "#b00020" }}>Connect your wallet to continue.</p>}
+      {!publicKey && <p style={{ color: "var(--color-danger)" }}>Connect your wallet to continue.</p>}
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 12 }}>
           <label>
@@ -222,7 +222,7 @@ export default function NewEscrow() {
             Discard draft
           </Button>
         </div>
-        {error && <p style={{ color: "#b00020" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       </form>
     </div>
   );

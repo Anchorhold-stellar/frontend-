@@ -60,7 +60,7 @@ export default function Disputes() {
   return (
     <div>
       <h1>Disputes</h1>
-      {error && <p style={{ color: "#b00020" }}>{error}</p>}
+      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       {!error && disputes === null && <Spinner label="Loading disputes…" />}
       {disputes?.length === 0 && <EmptyState>No disputes yet.</EmptyState>}
       {disputes?.map((d) => (
