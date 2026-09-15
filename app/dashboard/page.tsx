@@ -146,6 +146,12 @@ export default function Dashboard() {
 
       {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       {!error && filtered === null && <Spinner label="Loading escrows…" />}
+      {filtered && filtered.length > 0 && (
+        <div style={{ fontSize: 13, color: "var(--color-muted)", marginBottom: 12 }}>
+          Showing {filtered.length} escrow{filtered.length === 1 ? "" : "s"} · total value{" "}
+          {filtered.reduce((sum, e) => sum + Number(e.total_amount), 0)}
+        </div>
+      )}
       {filtered?.length === 0 && (
         <EmptyState>No escrows match these filters{search && " and search"}.</EmptyState>
       )}
