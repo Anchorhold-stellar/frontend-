@@ -44,6 +44,11 @@ export default function NewEscrow() {
       setStatus("error");
       return;
     }
+    if (milestones.some((m) => !m.description.trim() || Number(m.amount) <= 0)) {
+      setError("every milestone needs a description and an amount greater than zero");
+      setStatus("error");
+      return;
+    }
 
     setStatus("submitting");
     setError(null);
