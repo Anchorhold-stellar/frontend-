@@ -5,6 +5,7 @@ import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
+import { CopyButton } from "../../../components/ui/CopyButton";
 
 type Evidence = {
   id: string;
@@ -100,9 +101,10 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
   return (
     <div>
       <h1>Dispute — escrow #{dispute.escrow_id}</h1>
-      <p>
+      <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         Milestone {dispute.milestone_index} · opened by{" "}
         <code>{dispute.opened_by_wallet}</code>
+        <CopyButton value={dispute.opened_by_wallet} />
       </p>
       <p>
         Status: <strong>{dispute.resolved ? dispute.outcome : "voting open"}</strong>

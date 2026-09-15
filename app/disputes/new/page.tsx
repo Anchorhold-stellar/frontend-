@@ -6,6 +6,7 @@ import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
+import { CopyButton } from "../../../components/ui/CopyButton";
 
 export default function NewDispute() {
   return (
@@ -93,8 +94,9 @@ function NewDisputeForm() {
     return (
       <div>
         <h1>Dispute opened</h1>
-        <p>
+        <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
           Transaction confirmed: <code>{hash}</code>
+          {hash && <CopyButton value={hash} />}
         </p>
         <a href={`/escrow/${escrowId}`}>Back to escrow</a>
       </div>

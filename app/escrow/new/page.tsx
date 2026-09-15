@@ -5,6 +5,7 @@ import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
+import { CopyButton } from "../../../components/ui/CopyButton";
 
 type MilestoneDraft = {
   description: string;
@@ -93,8 +94,9 @@ export default function NewEscrow() {
     return (
       <div>
         <h1>Escrow submitted</h1>
-        <p>
+        <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
           Transaction confirmed: <code>{hash}</code>
+          {hash && <CopyButton value={hash} />}
         </p>
         <a href="/dashboard">Back to dashboard</a>
       </div>
