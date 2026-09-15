@@ -9,6 +9,7 @@ import { ConfirmButton } from "../../../components/ui/ConfirmButton";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { isValidAccountAddress, isValidContractAddress } from "../../../lib/validation";
 import { useDocumentTitle } from "../../../lib/use-document-title";
+import { addRecentHost, getRecentHosts } from "../../../lib/recent-addresses";
 
 type MilestoneDraft = {
   description: string;
@@ -40,6 +41,11 @@ export default function NewEscrow() {
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
   const [hash, setHash] = useState<string | null>(null);
+  const [recentHosts, setRecentHosts] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecentHosts(getRecentHosts());
+  }, []);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(DRAFT_KEY);
@@ -129,6 +135,7 @@ export default function NewEscrow() {
       setHash(result.hash);
       setStatus("success");
       window.localStorage.removeItem(DRAFT_KEY);
+      addRecentHost(hostWallet);
       toast("Escrow created", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "failed to create escrow";
@@ -165,8 +172,14 @@ export default function NewEscrow() {
               onChange={(e) => setHostWallet(e.target.value)}
               placeholder="G..."
               required
+              list="recent-hosts"
               style={{ width: "100%" }}
             />
+            <datalist id="recent-hosts">
+              {recentHosts.map((address) => (
+                <option key={address} value={address} />
+              ))}
+            </datalist>
           </label>
           {hostWallet.length > 0 && !isValidAccountAddress(hostWallet) && (
             <div style={{ fontSize: 12, color: "var(--color-danger)" }}>
