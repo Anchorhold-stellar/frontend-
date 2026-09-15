@@ -6,7 +6,15 @@ type Milestone = {
   auto_release_at: string | null;
 };
 
-export function MilestoneTimeline({ milestones }: { milestones: Milestone[] }) {
+export function MilestoneTimeline({
+  milestones,
+  onConfirm,
+  confirmingIndex,
+}: {
+  milestones: Milestone[];
+  onConfirm?: (milestoneIndex: number) => void;
+  confirmingIndex?: number | null;
+}) {
   return (
     <ol style={{ listStyle: "none", padding: 0 }}>
       {milestones.map((m) => (
@@ -15,6 +23,7 @@ export function MilestoneTimeline({ milestones }: { milestones: Milestone[] }) {
           style={{
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
             padding: "12px 0",
             borderBottom: "1px solid #eee",
           }}
@@ -29,7 +38,17 @@ export function MilestoneTimeline({ milestones }: { milestones: Milestone[] }) {
                 : "Pending deposit"}
             </div>
           </div>
-          <div>{m.amount}</div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span>{m.amount}</span>
+            {!m.released && onConfirm && (
+              <button
+                onClick={() => onConfirm(m.milestone_index)}
+                disabled={confirmingIndex === m.milestone_index}
+              >
+                {confirmingIndex === m.milestone_index ? "Confirming…" : "Confirm & release"}
+              </button>
+            )}
+          </div>
         </li>
       ))}
     </ol>
