@@ -23,10 +23,10 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const KIND_COLORS: Record<ToastKind, string> = {
-  success: "#1a7f37",
-  error: "#b00020",
-  info: "#1f6feb",
+const KIND_COLOR_VARS: Record<ToastKind, string> = {
+  success: "var(--color-success)",
+  error: "var(--color-danger)",
+  info: "var(--color-info)",
 };
 
 const DISMISS_AFTER_MS = 5000;
@@ -36,13 +36,18 @@ let nextId = 1;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const toast = useCallback((message: string, kind: ToastKind = "info") => {
-    const id = nextId++;
-    setToasts((t) => [...t, { id, kind, message }]);
-    setTimeout(() => {
-      setToasts((t) => t.filter((item) => item.id !== id));
-    }, DISMISS_AFTER_MS);
+  const dismiss = useCallback((id: number) => {
+    setToasts((t) => t.filter((item) => item.id !== id));
   }, []);
+
+  const toast = useCallback(
+    (message: string, kind: ToastKind = "info") => {
+      const id = nextId++;
+      setToasts((t) => [...t, { id, kind, message }]);
+      setTimeout(() => dismiss(id), DISMISS_AFTER_MS);
+    },
+    [dismiss]
+  );
 
   const value = useMemo(() => ({ toast }), [toast]);
 
@@ -64,9 +69,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             style={{
-              background: "#fff",
-              border: `1px solid ${KIND_COLORS[t.kind]}`,
-              color: KIND_COLORS[t.kind],
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+              background: "var(--color-card-bg)",
+              border: `1px solid ${KIND_COLOR_VARS[t.kind]}`,
+              color: KIND_COLOR_VARS[t.kind],
               borderRadius: 6,
               padding: "10px 14px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
@@ -74,7 +82,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               fontSize: 14,
             }}
           >
-            {t.message}
+            <span style={{ flex: 1 }}>{t.message}</span>
+            <button
+              onClick={() => dismiss(t.id)}
+              aria-label="Dismiss"
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                cursor: "pointer",
+                fontSize: 14,
+                lineHeight: 1,
+                padding: 0,
+              }}
+            >
+              ×
+            </button>
           </div>
         ))}
       </div>
