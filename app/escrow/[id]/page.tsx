@@ -37,18 +37,29 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   const [confirmingIndex, setConfirmingIndex] = useState<number | null>(null);
   const [depositing, setDepositing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   async function loadEscrow() {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.id}`, {
       cache: "no-store",
     });
     setEscrow(res.ok ? await res.json() : null);
+    setLastUpdated(new Date());
   }
 
   useEffect(() => {
     loadEscrow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
+
+  const isLive = escrow ? !["completed", "cancelled"].includes(escrow.status) : false;
+
+  useEffect(() => {
+    if (!isLive) return;
+    const interval = setInterval(loadEscrow, 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLive, params.id]);
 
   async function handleConfirm(milestoneIndex: number) {
     if (!publicKey || !escrow) return;
@@ -126,6 +137,11 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       <h1>Escrow #{escrow.escrow_id}</h1>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
+        {isLive && lastUpdated && (
+          <span style={{ fontSize: 12, color: "var(--color-muted)" }}>
+            · updated {lastUpdated.toLocaleTimeString()}
+          </span>
+        )}
       </p>
 
       <div style={{ marginBottom: 16 }}>
