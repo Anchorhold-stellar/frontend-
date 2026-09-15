@@ -25,6 +25,22 @@ export async function connectFreighter(): Promise<string> {
   return freighter.requestAccess();
 }
 
+/**
+ * Returns the network Freighter is currently pointed at, and whether it
+ * matches the passphrase this app is configured for. Signing a transaction
+ * built for the wrong network fails cryptically at broadcast time, so it's
+ * worth surfacing the mismatch up front.
+ */
+export async function checkNetwork(): Promise<{ network: string; mismatch: boolean }> {
+  const freighter = await import("@stellar/freighter-api");
+  const details = await freighter.getNetworkDetails();
+  const expected = process.env.NEXT_PUBLIC_SOROBAN_NETWORK_PASSPHRASE;
+  return {
+    network: details.network,
+    mismatch: Boolean(expected) && details.networkPassphrase !== expected,
+  };
+}
+
 type SendTransactionResult = {
   status: "PENDING" | "DUPLICATE" | "TRY_AGAIN_LATER" | "ERROR";
   hash: string;

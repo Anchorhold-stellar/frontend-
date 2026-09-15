@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { connectFreighter } from "./wallet";
+import { checkNetwork, connectFreighter } from "./wallet";
 
 const STORAGE_KEY = "safetrust:wallet";
 
@@ -18,6 +18,8 @@ type WalletState = {
   publicKey: string | null;
   connecting: boolean;
   error: string | null;
+  network: string | null;
+  networkMismatch: boolean;
 };
 
 type WalletContextValue = WalletState & {
@@ -32,12 +34,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     publicKey: null,
     connecting: false,
     error: null,
+    network: null,
+    networkMismatch: false,
   });
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored) {
       setState((s) => ({ ...s, publicKey: stored }));
+      checkNetwork()
+        .then(({ network, mismatch }) =>
+          setState((s) => ({ ...s, network, networkMismatch: mismatch }))
+        )
+        .catch(() => {
+          // Freighter may not be installed/unlocked yet; the connect button
+          // will surface that when the user tries to interact.
+        });
     }
   }, []);
 
@@ -45,8 +57,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, connecting: true, error: null }));
     try {
       const publicKey = await connectFreighter();
+      const { network, mismatch } = await checkNetwork();
       window.localStorage.setItem(STORAGE_KEY, publicKey);
-      setState({ publicKey, connecting: false, error: null });
+      setState({ publicKey, connecting: false, error: null, network, networkMismatch: mismatch });
     } catch (err) {
       setState((s) => ({
         ...s,
@@ -58,7 +71,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
-    setState({ publicKey: null, connecting: false, error: null });
+    setState({ publicKey: null, connecting: false, error: null, network: null, networkMismatch: false });
   }, []);
 
   const value = useMemo(
