@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { WalletProvider } from "../lib/wallet-context";
@@ -6,9 +7,22 @@ import { ThemeProvider } from "../lib/theme-context";
 import { Nav } from "../components/Nav";
 import { NetworkBanner } from "../components/NetworkBanner";
 
-export const metadata = {
-  title: "SafeTrust v2",
-  description: "Self-custodied milestone escrow for rentals, on Soroban.",
+const TITLE = "SafeTrust v2";
+const DESCRIPTION = "Self-custodied milestone escrow for rentals, on Soroban.";
+
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
