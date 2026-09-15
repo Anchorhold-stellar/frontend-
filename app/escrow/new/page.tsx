@@ -5,6 +5,7 @@ import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
+import { ConfirmButton } from "../../../components/ui/ConfirmButton";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { isValidAccountAddress, isValidContractAddress } from "../../../lib/validation";
 
@@ -220,9 +221,14 @@ export default function NewEscrow() {
               style={{ flex: 1 }}
             />
             {milestones.length > 1 && (
-              <Button type="button" variant="danger" onClick={() => removeMilestone(i)}>
+              <ConfirmButton
+                type="button"
+                variant="danger"
+                confirmLabel="Confirm remove"
+                onConfirm={() => removeMilestone(i)}
+              >
                 Remove
-              </Button>
+              </ConfirmButton>
             )}
           </div>
         ))}
@@ -239,9 +245,9 @@ export default function NewEscrow() {
           <Button type="submit" disabled={!publicKey || status === "submitting"}>
             {status === "submitting" ? "Submitting…" : "Create escrow"}
           </Button>
-          <Button type="button" variant="secondary" onClick={clearDraft}>
+          <ConfirmButton type="button" confirmLabel="Confirm discard" onConfirm={clearDraft}>
             Discard draft
-          </Button>
+          </ConfirmButton>
         </div>
         {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
       </form>
