@@ -23,6 +23,23 @@ const emptyMilestone = (): MilestoneDraft => ({
   autoReleaseDays: "",
 });
 
+const MILESTONE_TEMPLATES: Record<string, MilestoneDraft[]> = {
+  "Move-in / move-out": [
+    { description: "Move-in", amount: "", autoReleaseDays: "0" },
+    { description: "Move-out", amount: "", autoReleaseDays: "30" },
+  ],
+  "Weekly (4 weeks)": [1, 2, 3, 4].map((week) => ({
+    description: `Week ${week}`,
+    amount: "",
+    autoReleaseDays: String(week * 7),
+  })),
+  "Monthly (3 months)": [1, 2, 3].map((month) => ({
+    description: `Month ${month}`,
+    amount: "",
+    autoReleaseDays: String(month * 30),
+  })),
+};
+
 const DRAFT_KEY = "safetrust:escrow-draft";
 
 type Draft = {
@@ -207,6 +224,21 @@ export default function NewEscrow() {
         </div>
 
         <h2>Milestones</h2>
+        <div style={{ marginBottom: 8, fontSize: 13, color: "var(--color-muted)" }}>
+          Start from a template (replaces the current milestones, amounts left blank):
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          {Object.entries(MILESTONE_TEMPLATES).map(([name, template]) => (
+            <Button
+              key={name}
+              type="button"
+              variant="secondary"
+              onClick={() => setMilestones(template.map((m) => ({ ...m })))}
+            >
+              {name}
+            </Button>
+          ))}
+        </div>
         {milestones.map((m, i) => (
           <div
             key={i}
