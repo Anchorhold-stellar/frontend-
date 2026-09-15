@@ -1,4 +1,5 @@
 import { Button } from "./ui/Button";
+import { Countdown } from "./Countdown";
 
 type Milestone = {
   milestone_index: number;
@@ -33,11 +34,16 @@ export function MilestoneTimeline({
           <div>
             <strong>{m.description}</strong>
             <div style={{ fontSize: 13, color: "#666" }}>
-              {m.released
-                ? "Released"
-                : m.auto_release_at
-                ? `Auto-releases ${new Date(m.auto_release_at).toLocaleString()}`
-                : "Pending deposit"}
+              {m.released ? (
+                "Released"
+              ) : m.auto_release_at ? (
+                <>
+                  Auto-releases in <Countdown target={m.auto_release_at} /> (
+                  {new Date(m.auto_release_at).toLocaleString()})
+                </>
+              ) : (
+                "Pending deposit"
+              )}
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
