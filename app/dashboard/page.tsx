@@ -37,6 +37,8 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS;
 
+const PAGE_SIZE = 10;
+
 export default function Dashboard() {
   useDocumentTitle("Dashboard");
   const { publicKey } = useWallet();
@@ -46,6 +48,11 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("id-desc");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [roleFilter, statusFilter, search, sortKey]);
 
   useEffect(() => {
     if (!publicKey) {
@@ -149,14 +156,15 @@ export default function Dashboard() {
       {!error && filtered === null && <Spinner label="Loading escrows…" />}
       {filtered && filtered.length > 0 && (
         <div style={{ fontSize: 13, color: "var(--color-muted)", marginBottom: 12 }}>
-          Showing {filtered.length} escrow{filtered.length === 1 ? "" : "s"} · total value{" "}
+          Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} escrow
+          {filtered.length === 1 ? "" : "s"} · total value{" "}
           {formatAmount(filtered.reduce((sum, e) => sum + Number(e.total_amount), 0))}
         </div>
       )}
       {filtered?.length === 0 && (
         <EmptyState>No escrows match these filters{search && " and search"}.</EmptyState>
       )}
-      {filtered?.map((e) => (
+      {filtered?.slice(0, visibleCount).map((e) => (
         <Card key={e.escrow_id}>
           <a href={`/escrow/${e.escrow_id}`} style={{ display: "flex", justifyContent: "space-between" }}>
             <span>
@@ -167,6 +175,11 @@ export default function Dashboard() {
           </a>
         </Card>
       ))}
+      {filtered && filtered.length > visibleCount && (
+        <Button variant="secondary" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+          Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+        </Button>
+      )}
     </div>
   );
 }
