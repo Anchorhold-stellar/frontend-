@@ -3,6 +3,7 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useWallet } from "../../../lib/wallet-context";
+import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 
 export default function NewDispute() {
@@ -15,6 +16,7 @@ export default function NewDispute() {
 
 function NewDisputeForm() {
   const { publicKey } = useWallet();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const escrowId = searchParams.get("escrowId");
 
@@ -66,9 +68,12 @@ function NewDisputeForm() {
       const result = await signAndSubmit(xdr);
       setHash(result.hash);
       setStatus("success");
+      toast("Dispute opened", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to open dispute");
+      const message = err instanceof Error ? err.message : "failed to open dispute";
+      setError(message);
       setStatus("error");
+      toast(message, "error");
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWallet } from "../../../lib/wallet-context";
+import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 
 type Evidence = {
@@ -24,6 +25,7 @@ type DisputeDetail = {
 
 export default function DisputeDetail({ params }: { params: { escrowId: string } }) {
   const { publicKey } = useWallet();
+  const { toast } = useToast();
   const [dispute, setDispute] = useState<DisputeDetail | null | undefined>(undefined);
   const [pending, setPending] = useState<"vote-renter" | "vote-host" | "resolve" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +60,11 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
       const { xdr } = await res.json();
       await signAndSubmit(xdr);
       await loadDispute();
+      toast("Vote cast", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to cast vote");
+      const message = err instanceof Error ? err.message : "failed to cast vote";
+      setError(message);
+      toast(message, "error");
     } finally {
       setPending(null);
     }
@@ -78,8 +83,11 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
       const { xdr } = await res.json();
       await signAndSubmit(xdr);
       await loadDispute();
+      toast("Dispute resolved", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to resolve dispute");
+      const message = err instanceof Error ? err.message : "failed to resolve dispute";
+      setError(message);
+      toast(message, "error");
     } finally {
       setPending(null);
     }

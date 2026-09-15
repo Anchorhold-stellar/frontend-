@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useWallet } from "../../../lib/wallet-context";
+import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 
 type MilestoneDraft = {
@@ -18,6 +19,7 @@ const emptyMilestone = (): MilestoneDraft => ({
 
 export default function NewEscrow() {
   const { publicKey } = useWallet();
+  const { toast } = useToast();
   const [hostWallet, setHostWallet] = useState("");
   const [assetAddress, setAssetAddress] = useState("");
   const [milestones, setMilestones] = useState<MilestoneDraft[]>([emptyMilestone()]);
@@ -77,9 +79,12 @@ export default function NewEscrow() {
       const result = await signAndSubmit(xdr);
       setHash(result.hash);
       setStatus("success");
+      toast("Escrow created", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to create escrow");
+      const message = err instanceof Error ? err.message : "failed to create escrow";
+      setError(message);
       setStatus("error");
+      toast(message, "error");
     }
   }
 

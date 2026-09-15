@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MilestoneTimeline } from "../../../components/MilestoneTimeline";
 import { useWallet } from "../../../lib/wallet-context";
+import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 
 type Milestone = {
@@ -24,6 +25,7 @@ type Escrow = {
 
 export default function EscrowDetail({ params }: { params: { id: string } }) {
   const { publicKey } = useWallet();
+  const { toast } = useToast();
   const [escrow, setEscrow] = useState<Escrow | null | undefined>(undefined);
   const [confirmingIndex, setConfirmingIndex] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -58,8 +60,11 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       const { xdr } = await res.json();
       await signAndSubmit(xdr);
       await loadEscrow();
+      toast("Milestone released", "success");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "failed to confirm milestone");
+      const message = err instanceof Error ? err.message : "failed to confirm milestone";
+      setActionError(message);
+      toast(message, "error");
     } finally {
       setConfirmingIndex(null);
     }
