@@ -11,6 +11,7 @@ import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { ProgressBar } from "../../../components/ui/ProgressBar";
 import { useDocumentTitle } from "../../../lib/use-document-title";
+import { formatAmount } from "../../../lib/format";
 
 type Milestone = {
   milestone_index: number;
@@ -136,7 +137,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     <div>
       <h1>Escrow #{escrow.escrow_id}</h1>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
+        <StatusBadge status={escrow.status} /> · Total: {formatAmount(escrow.total_amount)}
         {isLive && lastUpdated && (
           <span style={{ fontSize: 12, color: "var(--color-muted)" }}>
             · updated {lastUpdated.toLocaleTimeString()}
@@ -171,7 +172,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
             This escrow hasn&apos;t been funded yet. Deposit to start the milestone clock.
           </p>
           <Button onClick={handleDeposit} disabled={depositing}>
-            {depositing ? "Depositing…" : `Deposit ${escrow.total_amount}`}
+            {depositing ? "Depositing…" : `Deposit ${formatAmount(escrow.total_amount)}`}
           </Button>
         </div>
       )}

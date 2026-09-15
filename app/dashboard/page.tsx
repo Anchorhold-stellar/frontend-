@@ -8,6 +8,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
 import { Button } from "../../components/ui/Button";
 import { useDocumentTitle } from "../../lib/use-document-title";
+import { formatAmount } from "../../lib/format";
 
 type EscrowSummary = {
   escrow_id: number;
@@ -149,7 +150,7 @@ export default function Dashboard() {
       {filtered && filtered.length > 0 && (
         <div style={{ fontSize: 13, color: "var(--color-muted)", marginBottom: 12 }}>
           Showing {filtered.length} escrow{filtered.length === 1 ? "" : "s"} · total value{" "}
-          {filtered.reduce((sum, e) => sum + Number(e.total_amount), 0)}
+          {formatAmount(filtered.reduce((sum, e) => sum + Number(e.total_amount), 0))}
         </div>
       )}
       {filtered?.length === 0 && (
@@ -159,7 +160,7 @@ export default function Dashboard() {
         <Card key={e.escrow_id}>
           <a href={`/escrow/${e.escrow_id}`} style={{ display: "flex", justifyContent: "space-between" }}>
             <span>
-              Escrow #{e.escrow_id} — {e.total_amount}
+              Escrow #{e.escrow_id} — {formatAmount(e.total_amount)}
               {e.host_wallet === publicKey ? " (hosting)" : " (renting)"}
             </span>
             <StatusBadge status={e.status} />

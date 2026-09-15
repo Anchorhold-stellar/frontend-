@@ -7,6 +7,7 @@ import { signAndSubmit } from "../../../lib/wallet";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { useDocumentTitle } from "../../../lib/use-document-title";
+import { formatAmount, formatRelativeTime } from "../../../lib/format";
 
 type Evidence = {
   id: string;
@@ -131,10 +132,10 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
         Milestone {dispute.milestone_index}
         {disputedMilestone && (
           <>
-            (<strong>{disputedMilestone.description}</strong>, {disputedMilestone.amount})
+            (<strong>{disputedMilestone.description}</strong>, {formatAmount(disputedMilestone.amount)})
           </>
         )}{" "}
-        · opened by <code>{dispute.opened_by_wallet}</code>
+        · opened {formatRelativeTime(dispute.opened_at)} by <code>{dispute.opened_by_wallet}</code>
         <CopyButton value={dispute.opened_by_wallet} />
       </p>
       <p>
@@ -153,7 +154,9 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
               {ev.uri}
             </a>
             {ev.note && <div style={{ fontSize: 13, color: "var(--color-muted)" }}>{ev.note}</div>}
-            <div style={{ fontSize: 12, color: "var(--color-muted)" }}>from {ev.submitted_by}</div>
+            <div style={{ fontSize: 12, color: "var(--color-muted)" }}>
+              from {ev.submitted_by} · {formatRelativeTime(ev.created_at)}
+            </div>
           </li>
         ))}
       </ul>

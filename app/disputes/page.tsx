@@ -7,11 +7,13 @@ import { Badge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
 import { useDocumentTitle } from "../../lib/use-document-title";
+import { formatRelativeTime } from "../../lib/format";
 
 type DisputeSummary = {
   escrow_id: number;
   milestone_index: number;
   opened_by_wallet: string;
+  opened_at: string;
   resolved: boolean;
   outcome: string;
   renter_wallet: string;
@@ -72,7 +74,10 @@ export default function Disputes() {
             style={{ display: "flex", justifyContent: "space-between" }}
           >
             <span>
-              Escrow #{d.escrow_id} — milestone {d.milestone_index}
+              Escrow #{d.escrow_id} — milestone {d.milestone_index}{" "}
+              <span style={{ fontSize: 12, color: "var(--color-muted)" }}>
+                ({formatRelativeTime(d.opened_at)})
+              </span>
             </span>
             <Badge tone={d.resolved ? "success" : "warning"}>
               {d.resolved ? d.outcome : "voting open"}

@@ -1,5 +1,6 @@
 import { Button } from "./ui/Button";
 import { Countdown } from "./Countdown";
+import { formatAmount } from "../lib/format";
 
 type Milestone = {
   milestone_index: number;
@@ -47,7 +48,7 @@ export function MilestoneTimeline({
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <span>{m.amount}</span>
+            <span>{formatAmount(m.amount)}</span>
             {!m.released && onConfirm && (
               <Button
                 variant="secondary"
