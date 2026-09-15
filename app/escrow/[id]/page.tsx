@@ -7,6 +7,7 @@ import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
 import { StatusBadge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
+import { Button } from "../../../components/ui/Button";
 
 type Milestone = {
   milestone_index: number;
@@ -30,6 +31,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const [escrow, setEscrow] = useState<Escrow | null | undefined>(undefined);
   const [confirmingIndex, setConfirmingIndex] = useState<number | null>(null);
+  const [depositing, setDepositing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   async function loadEscrow() {
@@ -72,6 +74,33 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     }
   }
 
+  async function handleDeposit() {
+    if (!publicKey || !escrow) return;
+    setActionError(null);
+    setDepositing(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/build/deposit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          renterWallet: publicKey,
+          escrowId: escrow.escrow_id,
+        }),
+      });
+      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
+      const { xdr } = await res.json();
+      await signAndSubmit(xdr);
+      await loadEscrow();
+      toast("Deposit confirmed", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "failed to deposit";
+      setActionError(message);
+      toast(message, "error");
+    } finally {
+      setDepositing(false);
+    }
+  }
+
   if (escrow === undefined) {
     return <Spinner label="Loading escrow…" />;
   }
@@ -87,6 +116,18 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
       </p>
+
+      {isRenter && escrow.status === "created" && (
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ color: "#666", fontSize: 14 }}>
+            This escrow hasn&apos;t been funded yet. Deposit to start the milestone clock.
+          </p>
+          <Button onClick={handleDeposit} disabled={depositing}>
+            {depositing ? "Depositing…" : `Deposit ${escrow.total_amount}`}
+          </Button>
+        </div>
+      )}
+
       <MilestoneTimeline
         milestones={escrow.milestones}
         onConfirm={isRenter ? handleConfirm : undefined}
