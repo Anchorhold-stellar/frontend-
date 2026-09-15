@@ -1,5 +1,5 @@
 export function ProgressBar({ fraction }: { fraction: number }) {
-  const percent = Math.min(100, Math.max(0, Math.round(fraction * 100)));
+  const percent = Number.isNaN(fraction) ? 0 : Math.min(100, Math.max(0, Math.round(fraction * 100)));
   return (
     <div
       role="progressbar"
