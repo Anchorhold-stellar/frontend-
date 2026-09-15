@@ -177,6 +177,9 @@ export default function NewEscrow() {
 
   return (
     <div>
+      <a href="/dashboard" style={{ fontSize: 13 }}>
+        ← Back to dashboard
+      </a>
       <h1>Create an escrow</h1>
       {!publicKey && <p style={{ color: "var(--color-danger)" }}>Connect your wallet to continue.</p>}
       <form onSubmit={handleSubmit}>

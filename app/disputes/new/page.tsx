@@ -84,6 +84,9 @@ function NewDisputeForm() {
   if (!escrowId) {
     return (
       <div>
+        <a href="/dashboard" style={{ fontSize: 13 }}>
+          ← Back to dashboard
+        </a>
         <h1>Open a dispute</h1>
         <p style={{ color: "var(--color-danger)" }}>
           No escrow selected. Open this page from an escrow&apos;s detail view.
@@ -107,6 +110,9 @@ function NewDisputeForm() {
 
   return (
     <div>
+      <a href={`/escrow/${escrowId}`} style={{ fontSize: 13 }}>
+        ← Back to escrow
+      </a>
       <h1>Open a dispute for escrow #{escrowId}</h1>
       {!publicKey && <p style={{ color: "var(--color-danger)" }}>Connect your wallet to continue.</p>}
       <form onSubmit={handleSubmit}>

@@ -149,6 +149,9 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
 
   return (
     <div>
+      <a href="/dashboard" style={{ fontSize: 13 }}>
+        ← Back to dashboard
+      </a>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>Escrow #{escrow.escrow_id}</h1>
         <div style={{ display: "flex", gap: 12 }}>

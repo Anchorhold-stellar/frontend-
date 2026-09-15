@@ -127,6 +127,9 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
 
   return (
     <div>
+      <a href="/disputes" style={{ fontSize: 13 }}>
+        ← Back to disputes
+      </a>
       <h1>Dispute — escrow #{dispute.escrow_id}</h1>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         Milestone {dispute.milestone_index}
