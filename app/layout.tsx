@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { WalletProvider } from "../lib/wallet-context";
+import { NavWallet } from "../components/NavWallet";
 
 export const metadata = {
   title: "SafeTrust v2",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <nav
             style={{
               display: "flex",
+              alignItems: "center",
               gap: 24,
               padding: "16px 24px",
               borderBottom: "1px solid #e5e5e5",
@@ -22,6 +24,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <strong>SafeTrust v2</strong>
             <a href="/dashboard">Dashboard</a>
             <a href="/disputes">Disputes</a>
+            <a href="/escrow/new">New escrow</a>
+            <div style={{ marginLeft: "auto" }}>
+              <NavWallet />
+            </div>
           </nav>
           <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>{children}</main>
         </WalletProvider>
