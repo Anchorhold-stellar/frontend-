@@ -12,6 +12,9 @@ Soroban escrow contract to talk to (see [API contract](#api-contract) below).
 
 ## Getting started
 
+Requires Node `^22.22.2 || ^24.15.0 || >=26.0.0` — the test suite's jsdom
+dependency needs webidl APIs that older Node 20.x builds don't have.
+
 ```
 npm install
 cp .env.example .env.local   # fill in the values below
