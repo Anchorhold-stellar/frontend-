@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useWallet } from "../../lib/wallet-context";
 import { Card } from "../../components/ui/Card";
 import { StatusBadge } from "../../components/ui/Badge";
@@ -39,16 +40,60 @@ type SortKey = keyof typeof SORT_OPTIONS;
 
 const PAGE_SIZE = 10;
 
+function isRoleFilter(value: string | null): value is RoleFilter {
+  return value === "all" || value === "hosting" || value === "renting";
+}
+
+function isStatusFilter(value: string | null): value is (typeof STATUS_FILTERS)[number] {
+  return (STATUS_FILTERS as readonly string[]).includes(value ?? "");
+}
+
+function isSortKey(value: string | null): value is SortKey {
+  return Object.keys(SORT_OPTIONS).includes(value ?? "");
+}
+
 export default function Dashboard() {
+  return (
+    <Suspense fallback={<Spinner label="Loading dashboard…" />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   useDocumentTitle("Dashboard");
   const { publicKey } = useWallet();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [escrows, setEscrows] = useState<EscrowSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("id-desc");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>(() => {
+    const value = searchParams.get("role");
+    return isRoleFilter(value) ? value : "all";
+  });
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>(() => {
+    const value = searchParams.get("status");
+    return isStatusFilter(value) ? value : "all";
+  });
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    const value = searchParams.get("sort");
+    return isSortKey(value) ? value : "id-desc";
+  });
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (roleFilter !== "all") params.set("role", roleFilter);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (search) params.set("q", search);
+    if (sortKey !== "id-desc") params.set("sort", sortKey);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleFilter, statusFilter, search, sortKey]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
