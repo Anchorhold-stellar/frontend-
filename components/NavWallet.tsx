@@ -1,21 +1,22 @@
 "use client";
 
 import { useWallet } from "../lib/wallet-context";
+import { Button } from "./ui/Button";
 
 export function NavWallet() {
   const { publicKey, connecting, connect, disconnect } = useWallet();
 
   if (publicKey) {
     return (
-      <button onClick={disconnect} title="Disconnect wallet">
+      <Button variant="secondary" onClick={disconnect} title="Disconnect wallet">
         {publicKey.slice(0, 4)}…{publicKey.slice(-4)}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button onClick={connect} disabled={connecting}>
+    <Button onClick={connect} disabled={connecting}>
       {connecting ? "Connecting…" : "Connect wallet"}
-    </button>
+    </Button>
   );
 }

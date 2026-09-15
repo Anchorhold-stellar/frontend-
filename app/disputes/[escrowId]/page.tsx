@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { Button } from "../../../components/ui/Button";
 
 type Evidence = {
   id: string;
@@ -123,15 +124,15 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
 
       {!dispute.resolved && (
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <button onClick={() => vote(true)} disabled={!publicKey || pending !== null}>
+          <Button onClick={() => vote(true)} disabled={!publicKey || pending !== null}>
             {pending === "vote-renter" ? "Voting…" : "Vote for renter"}
-          </button>
-          <button onClick={() => vote(false)} disabled={!publicKey || pending !== null}>
+          </Button>
+          <Button onClick={() => vote(false)} disabled={!publicKey || pending !== null}>
             {pending === "vote-host" ? "Voting…" : "Vote for host"}
-          </button>
-          <button onClick={resolve} disabled={pending !== null}>
+          </Button>
+          <Button variant="secondary" onClick={resolve} disabled={pending !== null}>
             {pending === "resolve" ? "Resolving…" : "Resolve (once votes are in)"}
-          </button>
+          </Button>
         </div>
       )}
       {error && <p style={{ color: "#b00020" }}>{error}</p>}

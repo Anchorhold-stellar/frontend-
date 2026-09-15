@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { Button } from "../../../components/ui/Button";
 
 export default function NewDispute() {
   return (
@@ -143,9 +144,9 @@ function NewDisputeForm() {
             />
           </label>
         </div>
-        <button type="submit" disabled={!publicKey || status === "submitting"}>
+        <Button type="submit" disabled={!publicKey || status === "submitting"}>
           {status === "submitting" ? "Submitting…" : "Open dispute"}
-        </button>
+        </Button>
         {error && <p style={{ color: "#b00020" }}>{error}</p>}
       </form>
     </div>

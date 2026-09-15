@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { Button } from "../../../components/ui/Button";
 
 type MilestoneDraft = {
   description: string;
@@ -162,20 +163,25 @@ export default function NewEscrow() {
               style={{ flex: 1 }}
             />
             {milestones.length > 1 && (
-              <button type="button" onClick={() => removeMilestone(i)}>
+              <Button type="button" variant="danger" onClick={() => removeMilestone(i)}>
                 Remove
-              </button>
+              </Button>
             )}
           </div>
         ))}
-        <button type="button" onClick={addMilestone} style={{ marginBottom: 16 }}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={addMilestone}
+          style={{ marginBottom: 16 }}
+        >
           Add milestone
-        </button>
+        </Button>
 
         <div>
-          <button type="submit" disabled={!publicKey || status === "submitting"}>
+          <Button type="submit" disabled={!publicKey || status === "submitting"}>
             {status === "submitting" ? "Submitting…" : "Create escrow"}
-          </button>
+          </Button>
         </div>
         {error && <p style={{ color: "#b00020" }}>{error}</p>}
       </form>

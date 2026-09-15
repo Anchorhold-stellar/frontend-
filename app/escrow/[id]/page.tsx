@@ -5,6 +5,8 @@ import { MilestoneTimeline } from "../../../components/MilestoneTimeline";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { StatusBadge } from "../../../components/ui/Badge";
+import { Spinner } from "../../../components/ui/Spinner";
 
 type Milestone = {
   milestone_index: number;
@@ -71,7 +73,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   }
 
   if (escrow === undefined) {
-    return <p>Loading…</p>;
+    return <Spinner label="Loading escrow…" />;
   }
   if (escrow === null) {
     return <p>Escrow not found.</p>;
@@ -82,8 +84,8 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   return (
     <div>
       <h1>Escrow #{escrow.escrow_id}</h1>
-      <p>
-        Status: <strong>{escrow.status}</strong> · Total: {escrow.total_amount}
+      <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <StatusBadge status={escrow.status} /> · Total: {escrow.total_amount}
       </p>
       <MilestoneTimeline
         milestones={escrow.milestones}

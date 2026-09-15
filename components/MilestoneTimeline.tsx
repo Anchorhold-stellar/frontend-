@@ -1,3 +1,5 @@
+import { Button } from "./ui/Button";
+
 type Milestone = {
   milestone_index: number;
   description: string;
@@ -41,12 +43,13 @@ export function MilestoneTimeline({
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <span>{m.amount}</span>
             {!m.released && onConfirm && (
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => onConfirm(m.milestone_index)}
                 disabled={confirmingIndex === m.milestone_index}
               >
                 {confirmingIndex === m.milestone_index ? "Confirming…" : "Confirm & release"}
-              </button>
+              </Button>
             )}
           </div>
         </li>
