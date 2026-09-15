@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
@@ -19,6 +19,14 @@ const emptyMilestone = (): MilestoneDraft => ({
   autoReleaseDays: "",
 });
 
+const DRAFT_KEY = "safetrust:escrow-draft";
+
+type Draft = {
+  hostWallet: string;
+  assetAddress: string;
+  milestones: MilestoneDraft[];
+};
+
 export default function NewEscrow() {
   const { publicKey } = useWallet();
   const { toast } = useToast();
@@ -28,6 +36,31 @@ export default function NewEscrow() {
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
   const [hash, setHash] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(DRAFT_KEY);
+    if (!stored) return;
+    try {
+      const draft: Draft = JSON.parse(stored);
+      setHostWallet(draft.hostWallet);
+      setAssetAddress(draft.assetAddress);
+      if (draft.milestones.length > 0) setMilestones(draft.milestones);
+    } catch {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const draft: Draft = { hostWallet, assetAddress, milestones };
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [hostWallet, assetAddress, milestones]);
+
+  function clearDraft() {
+    window.localStorage.removeItem(DRAFT_KEY);
+    setHostWallet("");
+    setAssetAddress("");
+    setMilestones([emptyMilestone()]);
+  }
 
   function updateMilestone(index: number, patch: Partial<MilestoneDraft>) {
     setMilestones((rows) => rows.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -81,6 +114,7 @@ export default function NewEscrow() {
       const result = await signAndSubmit(xdr);
       setHash(result.hash);
       setStatus("success");
+      window.localStorage.removeItem(DRAFT_KEY);
       toast("Escrow created", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "failed to create escrow";
@@ -180,9 +214,12 @@ export default function NewEscrow() {
           Add milestone
         </Button>
 
-        <div>
+        <div style={{ display: "flex", gap: 8 }}>
           <Button type="submit" disabled={!publicKey || status === "submitting"}>
             {status === "submitting" ? "Submitting…" : "Create escrow"}
+          </Button>
+          <Button type="button" variant="secondary" onClick={clearDraft}>
+            Discard draft
           </Button>
         </div>
         {error && <p style={{ color: "#b00020" }}>{error}</p>}
