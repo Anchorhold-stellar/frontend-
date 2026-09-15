@@ -3,9 +3,8 @@ import "./globals.css";
 import { WalletProvider } from "../lib/wallet-context";
 import { ToastProvider } from "../lib/toast-context";
 import { ThemeProvider } from "../lib/theme-context";
-import { NavWallet } from "../components/NavWallet";
+import { Nav } from "../components/Nav";
 import { NetworkBanner } from "../components/NetworkBanner";
-import { ThemeToggle } from "../components/ThemeToggle";
 
 export const metadata = {
   title: "SafeTrust v2",
@@ -29,24 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <ToastProvider>
             <WalletProvider>
               <NetworkBanner />
-              <nav
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 24,
-                  padding: "16px 24px",
-                  borderBottom: "1px solid var(--color-border)",
-                }}
-              >
-                <strong>SafeTrust v2</strong>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/disputes">Disputes</a>
-                <a href="/escrow/new">New escrow</a>
-                <div style={{ marginLeft: "auto", display: "flex", gap: 12, alignItems: "center" }}>
-                  <ThemeToggle />
-                  <NavWallet />
-                </div>
-              </nav>
+              <Nav />
               <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>{children}</main>
             </WalletProvider>
           </ToastProvider>
