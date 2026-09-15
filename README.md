@@ -1,6 +1,6 @@
-# SafeTrust v2 — Frontend
+# AnchorHold — Frontend
 
-Next.js 14 (App Router) frontend for SafeTrust v2, a self-custodied,
+Next.js 14 (App Router) frontend for AnchorHold, a self-custodied,
 milestone-capable rental escrow platform on Stellar/Soroban. Renters and
 hosts create escrows, fund and release them milestone by milestone, and
 fall back to a juror-voted on-chain dispute process if something goes
