@@ -1,10 +1,10 @@
 type Tone = "neutral" | "success" | "warning" | "danger";
 
 const TONE_COLORS: Record<Tone, { background: string; color: string }> = {
-  neutral: { background: "#f0f0f0", color: "#444" },
-  success: { background: "#e6f4ea", color: "#1a7f37" },
-  warning: { background: "#fff4e5", color: "#946200" },
-  danger: { background: "#fbe9e9", color: "#b00020" },
+  neutral: { background: "var(--color-neutral-bg)", color: "var(--color-neutral-fg)" },
+  success: { background: "var(--color-success-bg)", color: "var(--color-success)" },
+  warning: { background: "var(--color-warning-bg)", color: "var(--color-warning)" },
+  danger: { background: "var(--color-danger-bg)", color: "var(--color-danger)" },
 };
 
 const STATUS_TONES: Record<string, Tone> = {

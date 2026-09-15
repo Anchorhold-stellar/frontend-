@@ -10,8 +10,8 @@ export function NetworkBanner() {
   return (
     <div
       style={{
-        background: "#fff4e5",
-        color: "#946200",
+        background: "var(--color-warning-bg)",
+        color: "var(--color-warning)",
         padding: "8px 24px",
         fontSize: 13,
         textAlign: "center",

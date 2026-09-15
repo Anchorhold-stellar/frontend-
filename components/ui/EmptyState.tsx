@@ -4,11 +4,11 @@ export function EmptyState({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        border: "1px dashed #ddd",
+        border: "1px dashed var(--color-secondary-border)",
         borderRadius: 8,
         padding: 24,
         textAlign: "center",
-        color: "#666",
+        color: "var(--color-muted)",
       }}
     >
       {children}
