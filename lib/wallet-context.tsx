@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { connectFreighter } from "./wallet";
+
 const STORAGE_KEY = "safetrust:wallet";
 
 type WalletState = {
@@ -24,17 +26,6 @@ type WalletContextValue = WalletState & {
 };
 
 const WalletContext = createContext<WalletContextValue | null>(null);
-
-// Swapped in by the real Freighter wiring (see lib/wallet.ts). Kept as an
-// injected function rather than importing freighter-api directly here so
-// this file only owns state/persistence, not wallet-provider specifics.
-let connectImpl: () => Promise<string> = async () => {
-  throw new Error("wallet connector not configured");
-};
-
-export function setWalletConnector(impl: () => Promise<string>) {
-  connectImpl = impl;
-}
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WalletState>({
@@ -53,7 +44,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const connect = useCallback(async () => {
     setState((s) => ({ ...s, connecting: true, error: null }));
     try {
-      const publicKey = await connectImpl();
+      const publicKey = await connectFreighter();
       window.localStorage.setItem(STORAGE_KEY, publicKey);
       setState({ publicKey, connecting: false, error: null });
     } catch (err) {
