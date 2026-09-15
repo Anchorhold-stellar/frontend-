@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useWallet } from "../../lib/wallet-context";
+import { Card } from "../../components/ui/Card";
+import { StatusBadge } from "../../components/ui/Badge";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { Spinner } from "../../components/ui/Spinner";
 
 type EscrowSummary = {
   escrow_id: number;
@@ -46,7 +50,7 @@ export default function Dashboard() {
     return (
       <div>
         <h1>Your escrows</h1>
-        <p>Connect your wallet to see escrows you&apos;re renting or hosting.</p>
+        <EmptyState>Connect your wallet to see escrows you&apos;re renting or hosting.</EmptyState>
       </div>
     );
   }
@@ -55,18 +59,19 @@ export default function Dashboard() {
     <div>
       <h1>Your escrows</h1>
       {error && <p style={{ color: "#b00020" }}>{error}</p>}
-      {!error && escrows === null && <p>Loading…</p>}
-      {escrows?.length === 0 && <p>No escrows yet.</p>}
-      <ul>
-        {escrows?.map((e) => (
-          <li key={e.escrow_id}>
-            <a href={`/escrow/${e.escrow_id}`}>
-              Escrow #{e.escrow_id} — {e.status} — {e.total_amount}
+      {!error && escrows === null && <Spinner label="Loading escrows…" />}
+      {escrows?.length === 0 && <EmptyState>No escrows yet.</EmptyState>}
+      {escrows?.map((e) => (
+        <Card key={e.escrow_id}>
+          <a href={`/escrow/${e.escrow_id}`} style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>
+              Escrow #{e.escrow_id} — {e.total_amount}
               {e.host_wallet === publicKey ? " (hosting)" : " (renting)"}
-            </a>
-          </li>
-        ))}
-      </ul>
+            </span>
+            <StatusBadge status={e.status} />
+          </a>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useWallet } from "../../lib/wallet-context";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { Spinner } from "../../components/ui/Spinner";
 
 type DisputeSummary = {
   escrow_id: number;
@@ -48,7 +52,7 @@ export default function Disputes() {
     return (
       <div>
         <h1>Disputes</h1>
-        <p>Connect your wallet to see disputes you&apos;ve opened or are party to.</p>
+        <EmptyState>Connect your wallet to see disputes you&apos;ve opened or are party to.</EmptyState>
       </div>
     );
   }
@@ -57,18 +61,23 @@ export default function Disputes() {
     <div>
       <h1>Disputes</h1>
       {error && <p style={{ color: "#b00020" }}>{error}</p>}
-      {!error && disputes === null && <p>Loading…</p>}
-      {disputes?.length === 0 && <p>No disputes yet.</p>}
-      <ul>
-        {disputes?.map((d) => (
-          <li key={d.escrow_id}>
-            <a href={`/disputes/${d.escrow_id}`}>
-              Escrow #{d.escrow_id} — milestone {d.milestone_index} —{" "}
+      {!error && disputes === null && <Spinner label="Loading disputes…" />}
+      {disputes?.length === 0 && <EmptyState>No disputes yet.</EmptyState>}
+      {disputes?.map((d) => (
+        <Card key={d.escrow_id}>
+          <a
+            href={`/disputes/${d.escrow_id}`}
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
+            <span>
+              Escrow #{d.escrow_id} — milestone {d.milestone_index}
+            </span>
+            <Badge tone={d.resolved ? "success" : "warning"}>
               {d.resolved ? d.outcome : "voting open"}
-            </a>
-          </li>
-        ))}
-      </ul>
+            </Badge>
+          </a>
+        </Card>
+      ))}
     </div>
   );
 }
