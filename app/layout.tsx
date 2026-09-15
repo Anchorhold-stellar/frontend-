@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "./globals.css";
 import { WalletProvider } from "../lib/wallet-context";
 import { ToastProvider } from "../lib/toast-context";
 import { NavWallet } from "../components/NavWallet";
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 alignItems: "center",
                 gap: 24,
                 padding: "16px 24px",
-                borderBottom: "1px solid #e5e5e5",
+                borderBottom: "1px solid var(--color-border)",
               }}
             >
               <strong>SafeTrust v2</strong>
