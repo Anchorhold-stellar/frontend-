@@ -3,7 +3,7 @@
 import { useWallet } from "../lib/wallet-context";
 
 export function WalletConnect() {
-  const { publicKey, connecting, error, connect, disconnect } = useWallet();
+  const { publicKey, connecting, error, notInstalled, connect, disconnect } = useWallet();
 
   if (publicKey) {
     return (
@@ -19,7 +19,19 @@ export function WalletConnect() {
       <button onClick={connect} disabled={connecting}>
         {connecting ? "Connecting…" : "Connect Freighter"}
       </button>
-      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
+      {error && (
+        <p style={{ color: "var(--color-danger)" }}>
+          {error}
+          {notInstalled && (
+            <>
+              {" — "}
+              <a href="https://www.freighter.app/" target="_blank" rel="noreferrer">
+                install Freighter
+              </a>
+            </>
+          )}
+        </p>
+      )}
     </div>
   );
 }
