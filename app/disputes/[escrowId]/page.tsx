@@ -46,12 +46,25 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
   const [escrow, setEscrow] = useState<EscrowSummary | null>(null);
   const [pending, setPending] = useState<"vote-renter" | "vote-host" | "resolve" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function loadDispute() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/${params.escrowId}`, {
-      cache: "no-store",
-    });
-    setDispute(res.ok ? await res.json() : null);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/${params.escrowId}`, {
+        cache: "no-store",
+      });
+      if (res.status === 404) {
+        setDispute(null);
+        setLoadError(null);
+      } else if (!res.ok) {
+        setLoadError(`failed to load dispute (${res.status})`);
+      } else {
+        setDispute(await res.json());
+        setLoadError(null);
+      }
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "failed to load dispute");
+    }
   }
 
   async function loadEscrow() {
@@ -122,6 +135,16 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     }
   }
 
+  if (loadError) {
+    return (
+      <p style={{ color: "var(--color-danger)", display: "flex", gap: 8, alignItems: "center" }}>
+        {loadError}
+        <Button variant="secondary" onClick={loadDispute}>
+          Retry
+        </Button>
+      </p>
+    );
+  }
   if (dispute === undefined) return <p>Loading…</p>;
   if (dispute === null) return <p>No dispute found for this escrow.</p>;
 

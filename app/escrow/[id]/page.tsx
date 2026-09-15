@@ -39,12 +39,25 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   const [depositing, setDepositing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function loadEscrow() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.id}`, {
-      cache: "no-store",
-    });
-    setEscrow(res.ok ? await res.json() : null);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.id}`, {
+        cache: "no-store",
+      });
+      if (res.status === 404) {
+        setEscrow(null);
+        setLoadError(null);
+      } else if (!res.ok) {
+        setLoadError(`failed to load escrow (${res.status})`);
+      } else {
+        setEscrow(await res.json());
+        setLoadError(null);
+      }
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "failed to load escrow");
+    }
     setLastUpdated(new Date());
   }
 
@@ -117,6 +130,16 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     }
   }
 
+  if (loadError) {
+    return (
+      <p style={{ color: "var(--color-danger)", display: "flex", gap: 8, alignItems: "center" }}>
+        {loadError}
+        <Button variant="secondary" onClick={loadEscrow}>
+          Retry
+        </Button>
+      </p>
+    );
+  }
   if (escrow === undefined) {
     return <Spinner label="Loading escrow…" />;
   }

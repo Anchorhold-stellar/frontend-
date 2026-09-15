@@ -83,6 +83,7 @@ function DashboardContent() {
     return isSortKey(value) ? value : "id-desc";
   });
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -123,7 +124,7 @@ function DashboardContent() {
     return () => {
       cancelled = true;
     };
-  }, [publicKey]);
+  }, [publicKey, reloadToken]);
 
   const filtered = useMemo(() => {
     if (!escrows) return escrows;
@@ -197,7 +198,14 @@ function DashboardContent() {
         ))}
       </div>
 
-      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
+      {error && (
+        <p style={{ color: "var(--color-danger)", display: "flex", gap: 8, alignItems: "center" }}>
+          {error}
+          <Button variant="secondary" onClick={() => setReloadToken((t) => t + 1)}>
+            Retry
+          </Button>
+        </p>
+      )}
       {!error && filtered === null && <Spinner label="Loading escrows…" />}
       {filtered && filtered.length > 0 && (
         <div style={{ fontSize: 13, color: "var(--color-muted)", marginBottom: 12 }}>

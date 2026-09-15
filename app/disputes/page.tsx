@@ -6,6 +6,7 @@ import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Spinner } from "../../components/ui/Spinner";
+import { Button } from "../../components/ui/Button";
 import { useDocumentTitle } from "../../lib/use-document-title";
 import { formatRelativeTime } from "../../lib/format";
 
@@ -25,6 +26,7 @@ export default function Disputes() {
   const { publicKey } = useWallet();
   const [disputes, setDisputes] = useState<DisputeSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!publicKey) {
@@ -50,7 +52,7 @@ export default function Disputes() {
     return () => {
       cancelled = true;
     };
-  }, [publicKey]);
+  }, [publicKey, reloadToken]);
 
   if (!publicKey) {
     return (
@@ -64,7 +66,14 @@ export default function Disputes() {
   return (
     <div>
       <h1>Disputes</h1>
-      {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
+      {error && (
+        <p style={{ color: "var(--color-danger)", display: "flex", gap: 8, alignItems: "center" }}>
+          {error}
+          <Button variant="secondary" onClick={() => setReloadToken((t) => t + 1)}>
+            Retry
+          </Button>
+        </p>
+      )}
       {!error && disputes === null && <Spinner label="Loading disputes…" />}
       {disputes?.length === 0 && <EmptyState>No disputes yet.</EmptyState>}
       {disputes?.map((d) => (
