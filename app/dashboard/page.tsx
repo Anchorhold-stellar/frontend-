@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!publicKey) {
@@ -55,15 +56,17 @@ export default function Dashboard() {
 
   const filtered = useMemo(() => {
     if (!escrows) return escrows;
+    const query = search.trim();
     return escrows.filter((e) => {
       const roleMatch =
         roleFilter === "all" ||
         (roleFilter === "hosting" && e.host_wallet === publicKey) ||
         (roleFilter === "renting" && e.renter_wallet === publicKey);
       const statusMatch = statusFilter === "all" || e.status === statusFilter;
-      return roleMatch && statusMatch;
+      const searchMatch = query === "" || String(e.escrow_id).includes(query);
+      return roleMatch && statusMatch && searchMatch;
     });
-  }, [escrows, roleFilter, statusFilter, publicKey]);
+  }, [escrows, roleFilter, statusFilter, search, publicKey]);
 
   if (!publicKey) {
     return (
@@ -77,6 +80,13 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Your escrows</h1>
+
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by escrow ID…"
+        style={{ width: "100%", padding: 8, marginBottom: 12 }}
+      />
 
       <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
         {(["all", "hosting", "renting"] as const).map((role) => (
@@ -103,7 +113,9 @@ export default function Dashboard() {
 
       {error && <p style={{ color: "#b00020" }}>{error}</p>}
       {!error && filtered === null && <Spinner label="Loading escrows…" />}
-      {filtered?.length === 0 && <EmptyState>No escrows match these filters.</EmptyState>}
+      {filtered?.length === 0 && (
+        <EmptyState>No escrows match these filters{search && " and search"}.</EmptyState>
+      )}
       {filtered?.map((e) => (
         <Card key={e.escrow_id}>
           <a href={`/escrow/${e.escrow_id}`} style={{ display: "flex", justifyContent: "space-between" }}>
