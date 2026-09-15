@@ -25,10 +25,22 @@ type DisputeDetail = {
   evidence: Evidence[];
 };
 
+type Milestone = {
+  milestone_index: number;
+  description: string;
+  amount: string;
+};
+
+type EscrowSummary = {
+  escrow_id: number;
+  milestones: Milestone[];
+};
+
 export default function DisputeDetail({ params }: { params: { escrowId: string } }) {
   const { publicKey } = useWallet();
   const { toast } = useToast();
   const [dispute, setDispute] = useState<DisputeDetail | null | undefined>(undefined);
+  const [escrow, setEscrow] = useState<EscrowSummary | null>(null);
   const [pending, setPending] = useState<"vote-renter" | "vote-host" | "resolve" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,10 +51,22 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     setDispute(res.ok ? await res.json() : null);
   }
 
+  async function loadEscrow() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.escrowId}`, {
+      cache: "no-store",
+    });
+    setEscrow(res.ok ? await res.json() : null);
+  }
+
   useEffect(() => {
     loadDispute();
+    loadEscrow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.escrowId]);
+
+  const disputedMilestone = escrow?.milestones.find(
+    (m) => m.milestone_index === dispute?.milestone_index
+  );
 
   async function vote(voteForRenter: boolean) {
     if (!publicKey) return;
@@ -102,12 +126,20 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     <div>
       <h1>Dispute — escrow #{dispute.escrow_id}</h1>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        Milestone {dispute.milestone_index} · opened by{" "}
-        <code>{dispute.opened_by_wallet}</code>
+        Milestone {dispute.milestone_index}
+        {disputedMilestone && (
+          <>
+            (<strong>{disputedMilestone.description}</strong>, {disputedMilestone.amount})
+          </>
+        )}{" "}
+        · opened by <code>{dispute.opened_by_wallet}</code>
         <CopyButton value={dispute.opened_by_wallet} />
       </p>
       <p>
         Status: <strong>{dispute.resolved ? dispute.outcome : "voting open"}</strong>
+      </p>
+      <p>
+        <a href={`/escrow/${dispute.escrow_id}`}>View full escrow</a>
       </p>
 
       <h2>Evidence</h2>
