@@ -133,9 +133,29 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     .reduce((sum, m) => sum + Number(m.amount), 0);
   const totalAmount = Number(escrow.total_amount) || 1;
 
+  const summaryText = [
+    `Escrow #${escrow.escrow_id} — ${escrow.status}`,
+    `Total: ${formatAmount(escrow.total_amount)}`,
+    `Renter: ${escrow.renter_wallet}`,
+    `Host: ${escrow.host_wallet}`,
+    "Milestones:",
+    ...escrow.milestones.map(
+      (m) =>
+        `  ${m.milestone_index + 1}. ${m.description} — ${formatAmount(m.amount)} (${
+          m.released ? "released" : "pending"
+        })`
+    ),
+  ].join("\n");
+
   return (
     <div>
-      <h1>Escrow #{escrow.escrow_id}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Escrow #{escrow.escrow_id}</h1>
+        <div style={{ display: "flex", gap: 12 }}>
+          <CopyButton value={typeof window !== "undefined" ? window.location.href : ""} label="Copy link" />
+          <CopyButton value={summaryText} label="Copy summary" />
+        </div>
+      </div>
       <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <StatusBadge status={escrow.status} /> · Total: {formatAmount(escrow.total_amount)}
         {isLive && lastUpdated && (
