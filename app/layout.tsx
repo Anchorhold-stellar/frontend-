@@ -24,12 +24,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <ThemeProvider>
           <ToastProvider>
             <WalletProvider>
               <NetworkBanner />
               <Nav />
-              <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>{children}</main>
+              <main
+                id="main-content"
+                tabIndex={-1}
+                style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}
+              >
+                {children}
+              </main>
             </WalletProvider>
           </ToastProvider>
         </ThemeProvider>
