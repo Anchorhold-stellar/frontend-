@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "danger";
+type Variant = ButtonVariant;
 
 const VARIANT_STYLES: Record<Variant, { background: string; color: string; border: string }> = {
   primary: {
