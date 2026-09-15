@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { checkNetwork, connectFreighter } from "./wallet";
+import { checkNetwork, connectFreighter, FreighterNotInstalledError } from "./wallet";
 
 const STORAGE_KEY = "safetrust:wallet";
 
@@ -18,6 +18,7 @@ type WalletState = {
   publicKey: string | null;
   connecting: boolean;
   error: string | null;
+  notInstalled: boolean;
   network: string | null;
   networkMismatch: boolean;
 };
@@ -34,6 +35,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     publicKey: null,
     connecting: false,
     error: null,
+    notInstalled: false,
     network: null,
     networkMismatch: false,
   });
@@ -54,16 +56,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connect = useCallback(async () => {
-    setState((s) => ({ ...s, connecting: true, error: null }));
+    setState((s) => ({ ...s, connecting: true, error: null, notInstalled: false }));
     try {
       const publicKey = await connectFreighter();
       const { network, mismatch } = await checkNetwork();
       window.localStorage.setItem(STORAGE_KEY, publicKey);
-      setState({ publicKey, connecting: false, error: null, network, networkMismatch: mismatch });
+      setState({
+        publicKey,
+        connecting: false,
+        error: null,
+        notInstalled: false,
+        network,
+        networkMismatch: mismatch,
+      });
     } catch (err) {
       setState((s) => ({
         ...s,
         connecting: false,
+        notInstalled: err instanceof FreighterNotInstalledError,
         error: err instanceof Error ? err.message : "failed to connect wallet",
       }));
     }
@@ -71,7 +81,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
-    setState({ publicKey: null, connecting: false, error: null, network: null, networkMismatch: false });
+    setState({
+      publicKey: null,
+      connecting: false,
+      error: null,
+      notInstalled: false,
+      network: null,
+      networkMismatch: false,
+    });
   }, []);
 
   const value = useMemo(
