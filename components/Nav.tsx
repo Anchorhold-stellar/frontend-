@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { NavWallet } from "./NavWallet";
 import { ThemeToggle } from "./ThemeToggle";
+import { RpcStatus } from "./RpcStatus";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -47,6 +48,7 @@ export function Nav() {
             </a>
           ))}
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <RpcStatus />
             <ThemeToggle />
             <NavWallet />
           </div>
