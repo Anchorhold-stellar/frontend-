@@ -71,3 +71,12 @@ body {
 a {
   color: var(--color-info);
 }
+
+:focus-visible {
+  outline: 2px solid var(--color-info);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline-offset: 1px;
+}
