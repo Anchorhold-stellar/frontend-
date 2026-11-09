@@ -9,6 +9,7 @@ import { apiPost } from "../../../lib/api";
 import { StatusBadge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Button } from "../../../components/ui/Button";
+import { ConfirmButton } from "../../../components/ui/ConfirmButton";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { ProgressBar } from "../../../components/ui/ProgressBar";
 import { useDocumentTitle } from "../../../lib/use-document-title";
@@ -38,6 +39,7 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
   const [escrow, setEscrow] = useState<Escrow | null | undefined>(undefined);
   const [confirmingIndex, setConfirmingIndex] = useState<number | null>(null);
   const [depositing, setDepositing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -124,6 +126,37 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
       toast(message, "error");
     } finally {
       setDepositing(false);
+    }
+  }
+
+  /**
+   * Cancels an unfunded escrow. The backend rejects anything past `created`
+   * (the dispute path takes over once funds move), and the page only offers
+   * the button in that state — the ConfirmButton's two-click arm is the last
+   * line of defense against an accidental click.
+   */
+  async function handleCancel() {
+    if (!publicKey || !escrow) return;
+    setActionError(null);
+    setCancelling(true);
+    try {
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/escrows/build/cancel",
+        publicKey,
+        {
+          renterWallet: publicKey,
+          escrowId: escrow.escrow_id,
+        },
+      );
+      await signAndSubmit(xdr);
+      await loadEscrow();
+      toast("Escrow cancelled", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "failed to cancel escrow";
+      setActionError(message);
+      toast(message, "error");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -214,9 +247,18 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
           <p style={{ color: "var(--color-muted)", fontSize: 14 }}>
             This escrow hasn&apos;t been funded yet. Deposit to start the milestone clock.
           </p>
-          <Button onClick={handleDeposit} disabled={depositing}>
-            {depositing ? "Depositing…" : `Deposit ${formatAmount(escrow.total_amount)}`}
-          </Button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button onClick={handleDeposit} disabled={depositing || cancelling}>
+              {depositing ? "Depositing…" : `Deposit ${formatAmount(escrow.total_amount)}`}
+            </Button>
+            <ConfirmButton
+              onConfirm={handleCancel}
+              confirmLabel="Confirm cancel"
+              variant="danger"
+            >
+              {cancelling ? "Cancelling…" : "Cancel escrow"}
+            </ConfirmButton>
+          </div>
         </div>
       )}
 
