@@ -5,6 +5,7 @@ import { MilestoneTimeline } from "../../../components/MilestoneTimeline";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { apiPost } from "../../../lib/api";
 import { StatusBadge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Button } from "../../../components/ui/Button";
@@ -80,17 +81,15 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     setActionError(null);
     setConfirmingIndex(milestoneIndex);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/build/confirm-milestone`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/escrows/build/confirm-milestone",
+        publicKey,
+        {
           renterWallet: publicKey,
           escrowId: escrow.escrow_id,
           milestoneIndex,
-        }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+        },
+      );
       await signAndSubmit(xdr);
       await loadEscrow();
       toast("Milestone released", "success");
@@ -108,16 +107,14 @@ export default function EscrowDetail({ params }: { params: { id: string } }) {
     setActionError(null);
     setDepositing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/build/deposit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/escrows/build/deposit",
+        publicKey,
+        {
           renterWallet: publicKey,
           escrowId: escrow.escrow_id,
-        }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+        },
+      );
       await signAndSubmit(xdr);
       await loadEscrow();
       toast("Deposit confirmed", "success");

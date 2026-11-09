@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { apiPost } from "../../../lib/api";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { useDocumentTitle } from "../../../lib/use-document-title";
@@ -43,32 +44,22 @@ function NewDisputeForm() {
     setError(null);
 
     try {
-      const evidenceRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/disputes/${escrowId}/evidence`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ submittedBy: publicKey, uri: evidenceUri, note }),
-        }
-      );
-      if (!evidenceRes.ok) {
-        throw new Error(`failed to record evidence (${evidenceRes.status})`);
-      }
+      await apiPost(`/disputes/${escrowId}/evidence`, publicKey, {
+        submittedBy: publicKey,
+        uri: evidenceUri,
+        note,
+      });
 
-      const buildRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/raise`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/disputes/build/raise",
+        publicKey,
+        {
           callerWallet: publicKey,
           escrowId: Number(escrowId),
           milestoneIndex: Number(milestoneIndex),
           evidenceUri,
-        }),
-      });
-      if (!buildRes.ok) {
-        throw new Error(`failed to build transaction (${buildRes.status})`);
-      }
-      const { xdr } = await buildRes.json();
+        },
+      );
       const result = await signAndSubmit(xdr);
       setHash(result.hash);
       setStatus("success");

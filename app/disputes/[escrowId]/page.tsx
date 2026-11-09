@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { apiPost } from "../../../lib/api";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
 import { useDocumentTitle } from "../../../lib/use-document-title";
@@ -89,17 +90,15 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     setError(null);
     setPending(voteForRenter ? "vote-renter" : "vote-host");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/disputes/build/vote",
+        publicKey,
+        {
           jurorWallet: publicKey,
           escrowId: Number(params.escrowId),
           voteForRenter,
-        }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+        },
+      );
       await signAndSubmit(xdr);
       await loadDispute();
       toast("Vote cast", "success");
@@ -113,16 +112,18 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
   }
 
   async function resolve() {
+    if (!publicKey) return;
     setError(null);
     setPending("resolve");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/resolve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ escrowId: Number(params.escrowId) }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/disputes/build/resolve",
+        publicKey,
+        {
+          callerWallet: publicKey,
+          escrowId: Number(params.escrowId),
+        },
+      );
       await signAndSubmit(xdr);
       await loadDispute();
       toast("Dispute resolved", "success");

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { apiPost } from "../../../lib/api";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmButton } from "../../../components/ui/ConfirmButton";
 import { CopyButton } from "../../../components/ui/CopyButton";
@@ -128,10 +129,10 @@ export default function NewEscrow() {
     setError(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/build/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/escrows/build/create",
+        publicKey,
+        {
           renterWallet: publicKey,
           hostWallet,
           assetAddress,
@@ -142,12 +143,8 @@ export default function NewEscrow() {
             auto_release_at: 0,
             released: false,
           })),
-        }),
-      });
-      if (!res.ok) {
-        throw new Error(`failed to build transaction (${res.status})`);
-      }
-      const { xdr } = await res.json();
+        },
+      );
       const result = await signAndSubmit(xdr);
       setHash(result.hash);
       setStatus("success");
