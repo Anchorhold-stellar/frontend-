@@ -8,6 +8,7 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
     env: {
+      NEXT_PUBLIC_API_URL: "https://example.com/api",
       NEXT_PUBLIC_SOROBAN_RPC_URL: "https://example.com/rpc",
       NEXT_PUBLIC_SOROBAN_NETWORK_PASSPHRASE: "Test SDF Network ; September 2015",
     },

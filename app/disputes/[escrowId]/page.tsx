@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useWallet } from "../../../lib/wallet-context";
 import { useToast } from "../../../lib/toast-context";
 import { signAndSubmit } from "../../../lib/wallet";
+import { apiPost } from "../../../lib/api";
 import { Button } from "../../../components/ui/Button";
 import { CopyButton } from "../../../components/ui/CopyButton";
+import { JurorVotes, type VotesResponse } from "../../../components/JurorVotes";
 import { useDocumentTitle } from "../../../lib/use-document-title";
 import { formatAmount, formatRelativeTime } from "../../../lib/format";
 
@@ -17,14 +19,22 @@ type Evidence = {
   created_at: string;
 };
 
-type DisputeDetail = {
+type DisputeRow = {
   escrow_id: number;
   milestone_index: number;
   opened_by_wallet: string;
+  opened_at: string;
   resolved: boolean;
   outcome: string;
-  opened_at: string;
+};
+
+type DisputeDetail = DisputeRow & {
   evidence: Evidence[];
+};
+
+type DisputeWithVotes = {
+  dispute: DisputeDetail;
+  votes: VotesResponse;
 };
 
 type Milestone = {
@@ -38,70 +48,91 @@ type EscrowSummary = {
   milestones: Milestone[];
 };
 
+/**
+ * Every dispute on one escrow, each scoped to its milestone. The backend
+ * keys disputes (and their votes) by (escrow_id, milestone_index) — an
+ * escrow can collect several independent disputes over its lifetime — so
+ * this page enumerates them via the public disputes list, then loads each
+ * one's evidence plus its juror-vote tally from
+ * GET /disputes/:escrowId/:milestoneIndex/votes. Vote and resolve builds
+ * carry the milestone index the contract requires.
+ */
 export default function DisputeDetail({ params }: { params: { escrowId: string } }) {
   useDocumentTitle(`Dispute #${params.escrowId}`);
+  const escrowId = Number(params.escrowId);
   const { publicKey } = useWallet();
   const { toast } = useToast();
-  const [dispute, setDispute] = useState<DisputeDetail | null | undefined>(undefined);
   const [escrow, setEscrow] = useState<EscrowSummary | null>(null);
-  const [pending, setPending] = useState<"vote-renter" | "vote-host" | "resolve" | null>(null);
+  const [items, setItems] = useState<DisputeWithVotes[] | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  async function loadDispute() {
+  async function loadAll() {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/${params.escrowId}`, {
-        cache: "no-store",
-      });
-      if (res.status === 404) {
-        setDispute(null);
-        setLoadError(null);
-      } else if (!res.ok) {
-        setLoadError(`failed to load dispute (${res.status})`);
-      } else {
-        setDispute(await res.json());
-        setLoadError(null);
+      const [listRes, escrowRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes?limit=100`, { cache: "no-store" }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.escrowId}`, {
+          cache: "no-store",
+        }),
+      ]);
+      if (!listRes.ok) {
+        setLoadError(`failed to load disputes (${listRes.status})`);
+        return;
       }
+      const all = (await listRes.json()) as DisputeRow[];
+      const mine = all.filter((d) => d.escrow_id === escrowId);
+      const withVotes = await Promise.all(
+        mine.map(async (row) => {
+          const [detailRes, votesRes] = await Promise.all([
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/disputes/${row.escrow_id}/${row.milestone_index}`,
+              { cache: "no-store" },
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/disputes/${row.escrow_id}/${row.milestone_index}/votes`,
+              { cache: "no-store" },
+            ),
+          ]);
+          if (!detailRes.ok) throw new Error(`failed to load dispute (${detailRes.status})`);
+          if (!votesRes.ok) throw new Error(`failed to load votes (${votesRes.status})`);
+          return {
+            dispute: (await detailRes.json()) as DisputeDetail,
+            votes: (await votesRes.json()) as VotesResponse,
+          };
+        }),
+      );
+      setItems(withVotes);
+      setEscrow(escrowRes.ok ? ((await escrowRes.json()) as EscrowSummary) : null);
+      setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "failed to load dispute");
     }
   }
 
-  async function loadEscrow() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/escrows/${params.escrowId}`, {
-      cache: "no-store",
-    });
-    setEscrow(res.ok ? await res.json() : null);
-  }
-
   useEffect(() => {
-    loadDispute();
-    loadEscrow();
+    loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.escrowId]);
 
-  const disputedMilestone = escrow?.milestones.find(
-    (m) => m.milestone_index === dispute?.milestone_index
-  );
-
-  async function vote(voteForRenter: boolean) {
+  async function vote(dispute: DisputeDetail, voteForRenter: boolean) {
     if (!publicKey) return;
     setError(null);
-    setPending(voteForRenter ? "vote-renter" : "vote-host");
+    const key = `vote-${dispute.milestone_index}-${voteForRenter ? "renter" : "host"}`;
+    setPending(key);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/disputes/build/vote",
+        publicKey,
+        {
           jurorWallet: publicKey,
-          escrowId: Number(params.escrowId),
+          escrowId,
+          milestoneIndex: dispute.milestone_index,
           voteForRenter,
-        }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+        },
+      );
       await signAndSubmit(xdr);
-      await loadDispute();
+      await loadAll();
       toast("Vote cast", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "failed to cast vote";
@@ -112,19 +143,23 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     }
   }
 
-  async function resolve() {
+  async function resolve(dispute: DisputeDetail) {
+    if (!publicKey) return;
     setError(null);
-    setPending("resolve");
+    const key = `resolve-${dispute.milestone_index}`;
+    setPending(key);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes/build/resolve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ escrowId: Number(params.escrowId) }),
-      });
-      if (!res.ok) throw new Error(`failed to build transaction (${res.status})`);
-      const { xdr } = await res.json();
+      const { xdr } = await apiPost<{ xdr: string }>(
+        "/disputes/build/resolve",
+        publicKey,
+        {
+          callerWallet: publicKey,
+          escrowId,
+          milestoneIndex: dispute.milestone_index,
+        },
+      );
       await signAndSubmit(xdr);
-      await loadDispute();
+      await loadAll();
       toast("Dispute resolved", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "failed to resolve dispute";
@@ -139,67 +174,95 @@ export default function DisputeDetail({ params }: { params: { escrowId: string }
     return (
       <p style={{ color: "var(--color-danger)", display: "flex", gap: 8, alignItems: "center" }}>
         {loadError}
-        <Button variant="secondary" onClick={loadDispute}>
+        <Button variant="secondary" onClick={loadAll}>
           Retry
         </Button>
       </p>
     );
   }
-  if (dispute === undefined) return <p>Loading…</p>;
-  if (dispute === null) return <p>No dispute found for this escrow.</p>;
+  if (items === null) return <p>Loading…</p>;
+  if (items.length === 0) return <p>No dispute found for this escrow.</p>;
 
   return (
     <div>
       <a href="/disputes" style={{ fontSize: 13 }}>
         ← Back to disputes
       </a>
-      <h1>Dispute — escrow #{dispute.escrow_id}</h1>
-      <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        Milestone {dispute.milestone_index}
-        {disputedMilestone && (
-          <>
-            (<strong>{disputedMilestone.description}</strong>, {formatAmount(disputedMilestone.amount)})
-          </>
-        )}{" "}
-        · opened {formatRelativeTime(dispute.opened_at)} by <code>{dispute.opened_by_wallet}</code>
-        <CopyButton value={dispute.opened_by_wallet} />
-      </p>
-      <p>
-        Status: <strong>{dispute.resolved ? dispute.outcome : "voting open"}</strong>
-      </p>
-      <p>
-        <a href={`/escrow/${dispute.escrow_id}`}>View full escrow</a>
-      </p>
+      <h1>Disputes — escrow #{params.escrowId}</h1>
+      {items.map(({ dispute, votes }) => {
+        const disputedMilestone = escrow?.milestones.find(
+          (m) => m.milestone_index === dispute.milestone_index,
+        );
+        return (
+          <section key={dispute.milestone_index} style={{ marginBottom: 32 }}>
+            <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Milestone {dispute.milestone_index}
+              {disputedMilestone && (
+                <>
+                  (<strong>{disputedMilestone.description}</strong>,{" "}
+                  {formatAmount(disputedMilestone.amount)})
+                </>
+              )}{" "}
+              · opened {formatRelativeTime(dispute.opened_at)} by{" "}
+              <code>{dispute.opened_by_wallet}</code>
+              <CopyButton value={dispute.opened_by_wallet} />
+            </p>
+            <p>
+              Status: <strong>{dispute.resolved ? dispute.outcome : "voting open"}</strong>
+            </p>
+            <p>
+              <a href={`/escrow/${dispute.escrow_id}`}>View full escrow</a>
+            </p>
 
-      <h2>Evidence</h2>
-      {dispute.evidence.length === 0 && <p>No evidence submitted.</p>}
-      <ul>
-        {dispute.evidence.map((ev) => (
-          <li key={ev.id} style={{ marginBottom: 8 }}>
-            <a href={ev.uri} target="_blank" rel="noreferrer">
-              {ev.uri}
-            </a>
-            {ev.note && <div style={{ fontSize: 13, color: "var(--color-muted)" }}>{ev.note}</div>}
-            <div style={{ fontSize: 12, color: "var(--color-muted)" }}>
-              from {ev.submitted_by} · {formatRelativeTime(ev.created_at)}
-            </div>
-          </li>
-        ))}
-      </ul>
+            <h2>Evidence</h2>
+            {dispute.evidence.length === 0 && <p>No evidence submitted.</p>}
+            <ul>
+              {dispute.evidence.map((ev) => (
+                <li key={ev.id} style={{ marginBottom: 8 }}>
+                  <a href={ev.uri} target="_blank" rel="noreferrer">
+                    {ev.uri}
+                  </a>
+                  {ev.note && <div style={{ fontSize: 13, color: "var(--color-muted)" }}>{ev.note}</div>}
+                  <div style={{ fontSize: 12, color: "var(--color-muted)" }}>
+                    from {ev.submitted_by} · {formatRelativeTime(ev.created_at)}
+                  </div>
+                </li>
+              ))}
+            </ul>
 
-      {!dispute.resolved && (
-        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <Button onClick={() => vote(true)} disabled={!publicKey || pending !== null}>
-            {pending === "vote-renter" ? "Voting…" : "Vote for renter"}
-          </Button>
-          <Button onClick={() => vote(false)} disabled={!publicKey || pending !== null}>
-            {pending === "vote-host" ? "Voting…" : "Vote for host"}
-          </Button>
-          <Button variant="secondary" onClick={resolve} disabled={pending !== null}>
-            {pending === "resolve" ? "Resolving…" : "Resolve (once votes are in)"}
-          </Button>
-        </div>
-      )}
+            <h2>Juror votes</h2>
+            <JurorVotes votes={votes.votes} tally={votes.tally} />
+
+            {!dispute.resolved && (
+              <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <Button
+                  onClick={() => vote(dispute, true)}
+                  disabled={!publicKey || pending !== null}
+                >
+                  {pending === `vote-${dispute.milestone_index}-renter`
+                    ? "Voting…"
+                    : "Vote for renter"}
+                </Button>
+                <Button
+                  onClick={() => vote(dispute, false)}
+                  disabled={!publicKey || pending !== null}
+                >
+                  {pending === `vote-${dispute.milestone_index}-host` ? "Voting…" : "Vote for host"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => resolve(dispute)}
+                  disabled={pending !== null}
+                >
+                  {pending === `resolve-${dispute.milestone_index}`
+                    ? "Resolving…"
+                    : "Resolve (once votes are in)"}
+                </Button>
+              </div>
+            )}
+          </section>
+        );
+      })}
       {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
     </div>
   );
